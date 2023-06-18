@@ -1,8 +1,10 @@
 package com.xallery.album.ui
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -24,7 +26,11 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
 
     private val adapter = Adapter {
         toast(it.toString())
-        logx { "PictureFlowFragment: source=$it" }
+    }
+
+    override fun adaptWindowInsets(insets: Rect) {
+        vb.rv.updatePadding(top = insets.top)
+        super.adaptWindowInsets(insets)
     }
 
     override fun getViewModel() = ViewModelProvider(this)[PictureFlowViewModel::class.java]
@@ -34,14 +40,15 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
     }
 
     private fun initRV() {
-        val count = requireContext().resources.getInteger(com.xallery.common.R.integer.album_column_count)
+        val count =
+            requireContext().resources.getInteger(com.xallery.common.R.integer.album_column_count)
         vb.rv.layoutManager = GridLayoutManager(requireContext(), count)
         vb.rv.adapter = adapter
         vb.rv.setItemViewCacheSize(count * 2)
         vb.rv.setHasFixedSize(true)
 
         lifecycleScope.launch {
-            vm.fetchPicture()
+            vm.fetchPicture(true)
             vm.dataFlow.collectLatest {
                 if (it != null) {
                     adapter.updateData(it)
@@ -56,7 +63,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         private val differ = AsyncListDiffer(this,
             object : DiffUtil.ItemCallback<Source>() {
                 override fun areItemsTheSame(oldItem: Source, newItem: Source): Boolean {
-                    return oldItem === newItem
+                    return oldItem.id == newItem.id
                 }
 
                 override fun areContentsTheSame(oldItem: Source, newItem: Source): Boolean {
@@ -76,7 +83,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
             val position = holder.adapterPosition
             val bean = differ.currentList[position]
 
-            holder.iv.loadUri(bean.uri)
+            holder.iv.loadUri(bean.uri, bean.key)
             holder.iv.setOnClickListener {
                 onClick(bean)
             }

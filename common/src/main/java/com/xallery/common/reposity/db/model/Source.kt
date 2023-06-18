@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.bumptech.glide.signature.ObjectKey
+import com.xallery.common.reposity.constant.Constant
 
 @Entity
 data class Source(
@@ -24,6 +25,9 @@ data class Source(
     val sourceRotationDegrees: Int? = null,
 ){
 
-
     val key = ObjectKey(id)
+
+    val isImage = mimeType.startsWith(Constant.MimeType.IMAGE)
+
+    val isVideo = mimeType.startsWith(Constant.MimeType.VIDEO)
 }

@@ -12,7 +12,8 @@ import com.bumptech.glide.request.RequestOptions
 
 fun ImageView.loadUri(
     uri: Uri,
-    signature: Key? = null
+    signature: Key? = null,
+    centerCrop: Boolean = true
 ) {
     val options = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
@@ -21,6 +22,9 @@ fun ImageView.loadUri(
 
     if (signature != null) {
         options.signature(signature)
+    }
+    if (centerCrop) {
+        options.centerCrop()
     }
 
     Glide.with(context)
