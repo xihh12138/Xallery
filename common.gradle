@@ -1,0 +1,56 @@
+apply plugin:'kotlin-android'
+apply plugin:'kotlin-kapt'
+
+android {
+    buildFeatures {
+        dataBinding false
+        viewBinding true
+        buildConfig true
+    }
+
+    compileSdk 33
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 33
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true // 是否开启混淆，代码优化
+            zipAlignEnabled true// 是否开启字节对齐
+            crunchPngs true//是否对 PNG 图片进行压缩处理
+            debuggable false
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false // 是否开启混淆，代码优化
+            zipAlignEnabled false// 是否开启字节对齐
+            crunchPngs false//是否对 PNG 图片进行压缩处理
+            debuggable true
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation project(":common")
+
+    implementation rootProject.ext.depends.smartRefreshHeader
+    implementation rootProject.ext.depends.smartRefreshClassicsHeader
+    implementation rootProject.ext.depends.smartRefreshFooter
+    implementation rootProject.ext.depends.smartRefreshLayout
+}

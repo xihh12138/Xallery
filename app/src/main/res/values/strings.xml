@@ -1,0 +1,8 @@
+<resources>
+    <string name="no_permission">没有权限的话应用是没有用的哦</string>
+    <string name="access_storage_prompt">请允许应用程序访问您的所有文件，没有此权限它可能不能正常工作。</string>
+    <string name="media_management_alternative">如果你不想进行此操作，你也可以转到设备的 “设置” - “应用” - “特殊应用权限” - “媒体管理应用” 并允许此应用管理媒体文件。</string>
+    <string name="alternative_media_access">你也可以只允许访问媒体文件。但那样的话将无法处理隐藏的文件。</string>
+    <string name="all_files">所有文件</string>
+    <string name="media_only">仅媒体文件</string>
+</resources>

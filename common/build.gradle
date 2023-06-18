@@ -1,0 +1,91 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+}
+
+android {
+    buildFeatures {
+        dataBinding false
+        viewBinding true
+        buildConfig true
+    }
+
+    namespace 'com.xallery.common'
+    compileSdk 33
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 33
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += [
+                        "room.schemaLocation"  : "$projectDir/schemas".toString(),
+                        "room.incremental"     : "true",
+                        "room.expandProjection": "true"]
+            }
+        }
+
+        buildConfigField("String", "SHARE_PROVIDER_AUTHORITY", "\"${rootProject.ext.android.applicationId}.fileprovider\"")
+
+        manifestPlaceholders = [
+                applicationId         : rootProject.ext.android.applicationId,
+        ]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true // 是否开启混淆，代码优化
+            zipAlignEnabled true// 是否开启字节对齐
+            crunchPngs true//是否对 PNG 图片进行压缩处理
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            buildConfigField("Boolean", "LOGGABLE", "false")
+        }
+        debug {
+            minifyEnabled false // 是否开启混淆，代码优化
+            zipAlignEnabled false// 是否开启字节对齐
+            crunchPngs false//是否对 PNG 图片进行压缩处理
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            buildConfigField("Boolean", "LOGGABLE", "true")
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+
+    api project(":base")
+
+    //room数据库
+    implementation rootProject.ext.depends.room
+    implementation rootProject.ext.depends.room_ktx
+    kapt rootProject.ext.depends.room_kapt
+    testImplementation rootProject.ext.depends.room_test
+
+    //测试
+    testImplementation rootProject.ext.depends.junit
+    androidTestImplementation rootProject.ext.depends.junit_androidx
+    androidTestImplementation rootProject.ext.depends.junit_androidx_espresso
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
+
+    //glide
+    api rootProject.ext.depends.glide
+    //toast
+    api rootProject.ext.depends.toaster
+    //lottie
+    api rootProject.ext.depends.lottie
+}

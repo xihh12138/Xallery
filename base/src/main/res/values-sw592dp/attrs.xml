@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="star">
+        <attr name="margin" format="dimension|reference"/>
+        <attr name="isEdit" format="boolean"/>
+        <attr name="score" format="float"/>
+    </declare-styleable>
+
+    <declare-styleable name="EaseTitleBar">
+        <attr name="titleBarTextColor" format="reference|color" />
+        <attr name="titleBarTitle" format="reference|string" />
+        <attr name="titleBarTitleTextColor" format="reference|color" />
+
+        <attr name="titleBarsonTitle" format="reference|string" />
+        <attr name="titleBarsonTitleTextColor" format="reference|color" />
+        <attr name="titleBarCenterImage" format="reference" />
+
+        <attr name="titleBarCloseTitle" format="reference|string" />
+        <attr name="titleBarCloseTitleTextColor" format="reference|color" />
+
+        <attr name="titleBarLeftImage" format="reference" />
+        <attr name="titleBarLeftText" format="reference|string" />
+        <attr name="titleBarLeftTextColor" format="reference|color" />
+        <attr name="titleBarRightImage" format="reference" />
+        <attr name="titleBarRightText" format="reference|string" />
+        <attr name="titleBarRightTextColor" format="reference|color" />
+        <attr name="titleBarBackground" format="reference|color" />
+    </declare-styleable>
+    <declare-styleable name="MyCalendar">
+        <attr name="dateformat" format="string"></attr>
+        <attr name="titleSize" format="dimension"></attr>
+        <attr name="titleColor" format="color"></attr>
+        <attr name="goIcon" format="reference"></attr>
+        <attr name="preIcon" format="reference"></attr>
+        <attr name="dayInMonthColor" format="color"></attr>
+        <attr name="dayOutMonthcolor" format="color"></attr>
+        <attr name="todayColor" format="color"></attr>
+        <attr name="todayEmptycircleColor" format="color"></attr>
+        <attr name="todayFillcircleColor" format="color"></attr>
+        <attr name="calendarbackground" format="color|reference"></attr>
+    </declare-styleable>
+    <declare-styleable name="PasswordView">
+        <attr name="passwordLength" format="integer" />
+        <attr name="passwordPadding" format="dimension" />
+        <attr name="borderColor" format="color" />
+        <attr name="borderWidth" format="dimension" />
+        <attr name="cursorFlashTime" format="integer" />
+        <attr name="isCursorEnable" format="boolean" />
+        <attr name="cipherEnable" format="boolean" />
+        <attr name="cursorColor" format="color" />
+        <attr name="mode" format="enum">
+            <enum name="underline" value="0" />
+            <enum name="rect" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>

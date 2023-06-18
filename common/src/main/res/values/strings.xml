@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Xallery</string>
+
+    <string name="error_network">Sorry, network failure, please try again later.</string>
+
+    <string name="search_hint">Search</string>
+
+<!--  弹窗  -->
+
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_done">Done</string>
+
+<!--  弹窗  -->
+
+</resources>

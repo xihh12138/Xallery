@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MaxHeightRecyclerView">
+        <attr name="maxHeight" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="GradientTextView">
+
+        <attr name="startColor" format="color" />
+        <attr name="endColor" format="color" />
+
+    </declare-styleable>
+
+</resources>

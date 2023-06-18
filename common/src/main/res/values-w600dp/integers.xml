@@ -1,0 +1,3 @@
+<resources>
+    <integer name="album_column_count">5</integer>
+</resources>

@@ -1,0 +1,46 @@
+apply plugin:'com.android.application'
+apply from:'../common.gradle'
+
+android {
+    namespace rootProject.ext.android.applicationId
+
+    defaultConfig {
+        applicationId rootProject.ext.android.applicationId
+        versionCode rootProject.ext.android.versionCode
+        versionName rootProject.ext.android.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias 'xallery'
+            keyPassword 'qwe123'
+            storeFile file('./key/xallery.jks')
+            storePassword 'qwe123'
+        }
+    }
+
+    buildTypes {
+        release {
+            shrinkResources true //是否压缩资源
+            debuggable false
+
+            signingConfig signingConfigs.release
+        }
+        debug {
+            shrinkResources false //是否压缩资源
+            debuggable true
+
+            signingConfig signingConfigs.release
+
+            versionNameSuffix ".debug"
+        }
+    }
+}
+
+dependencies {
+
+    implementation project(':common')
+    implementation project(':module_app:album')
+}

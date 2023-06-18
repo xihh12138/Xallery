@@ -1,0 +1,34 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.TransparentStatus.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge">
+    </style>
+
+    <style name="Theme.TransparentStatus" parent="Theme.TransparentStatus.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="anim_bottom_in_out">
+        <item name="android:windowEnterAnimation">@anim/bottom_in</item>
+        <item name="android:windowExitAnimation">@anim/bottom_out</item>
+    </style>
+
+    <style name="anim_center_in_out">
+        <item name="android:windowEnterAnimation">@anim/center_in</item>
+        <item name="android:windowExitAnimation">@anim/center_out</item>
+    </style>
+
+    <style name="Theme.NoTitle.Dialog" parent="android:style/Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/anim_center_in_out</item>
+        <!-- 设置是否透明 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 无标题 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 背景 -->
+        <!--        <item name="android:background">@null</item>-->
+        <!-- 窗口背景 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 是否变暗 -->
+        <!--        <item name="android:backgroundDimEnabled">false</item>-->
+    </style>
+</resources>

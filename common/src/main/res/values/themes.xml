@@ -1,0 +1,44 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.Xallery" parent="Theme.TransparentStatus">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/secondary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/primary_pressed</item>
+        <item name="colorSecondaryVariant">@color/fourthly</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Customize your theme here. -->
+        <item name="colorError">@color/error</item>
+        <item name="android:screenOrientation">userPortrait</item>
+
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
+    </style>
+
+    <style name="PrimaryButtonStroke">
+        <item name="android:background">@drawable/selector_bg_stroke_primary_12</item>
+        <item name="android:textSize">@dimen/sp_16</item>
+        <item name="android:paddingTop">@dimen/dp_12</item>
+        <item name="android:paddingBottom">@dimen/dp_12</item>
+        <item name="android:paddingStart">@dimen/dp_17</item>
+        <item name="android:paddingEnd">@dimen/dp_17</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/selector_text_primary_btn</item>
+    </style>
+
+    <style name="PrimaryButton">
+        <item name="android:background">@drawable/selector_bg_primary_12</item>
+        <item name="android:textSize">@dimen/sp_16</item>
+        <item name="android:paddingTop">@dimen/dp_12</item>
+        <item name="android:paddingBottom">@dimen/dp_12</item>
+        <item name="android:paddingStart">@dimen/dp_17</item>
+        <item name="android:paddingEnd">@dimen/dp_17</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/selector_text_white_btn</item>
+    </style>
+
+    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
+    </style>
+</resources>
