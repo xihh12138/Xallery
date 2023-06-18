@@ -3,6 +3,7 @@ package com.xallery.main.ui
 import android.graphics.Rect
 import android.os.Bundle
 import androidx.annotation.DrawableRes
+import androidx.core.view.marginBottom
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -10,7 +11,6 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
-import com.xihh.xallery.R
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
 
@@ -18,7 +18,7 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
     override fun adaptWindowInsets(insets: Rect) {
         val new = Rect(insets)
-        new.bottom += vb.indicator.height
+        new.bottom += (vb.indicator.height + vb.indicator.marginBottom)
         super.adaptWindowInsets(new)
     }
 

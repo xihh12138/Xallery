@@ -18,7 +18,6 @@ import com.xallery.common.reposity.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xallery.common.util.toast
 import com.xihh.base.android.BaseFragment
-import com.xihh.base.util.logx
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -29,7 +28,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
     }
 
     override fun adaptWindowInsets(insets: Rect) {
-        vb.rv.updatePadding(top = insets.top)
+        vb.rv.updatePadding(top = insets.top, bottom = insets.bottom)
         super.adaptWindowInsets(insets)
     }
 

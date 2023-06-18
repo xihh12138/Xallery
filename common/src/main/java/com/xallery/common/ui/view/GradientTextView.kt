@@ -8,14 +8,6 @@ import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import com.xallery.common.R
 
-/**
- * 版权：中国麦风科技有限公司
- * @author Hem
- * @version 1.0.0
- * @创建日期 2023/3/28,14:55
- * @修改日期 2023/3/28
- * @description ---
- */
 class GradientTextView : AppCompatTextView {
 
     companion object {
