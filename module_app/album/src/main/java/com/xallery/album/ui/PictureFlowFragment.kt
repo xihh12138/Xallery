@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 
 class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlowViewModel>() {
 
+    private var page: Int = 0
+
     private val adapter = Adapter {
         toast(it.toString())
     }
@@ -39,6 +41,8 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
     }
 
     private fun initRV() {
+        page = arguments?.getInt(ARGUMENT_PAGE, page) ?: 0
+
         val count =
             requireContext().resources.getInteger(com.xallery.common.R.integer.album_column_count)
         vb.rv.layoutManager = GridLayoutManager(requireContext(), count)
@@ -47,13 +51,20 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         vb.rv.setHasFixedSize(true)
 
         lifecycleScope.launch {
-            vm.fetchPicture(true)
+            vm.fetchSource(page, true)
             vm.dataFlow.collectLatest {
-                if (it != null) {
-                    adapter.updateData(it)
+                if (it?.first == page) {
+                    it.second?.let { it1 ->
+                        adapter.updateData(it1)
+                    }
                 }
             }
         }
+    }
+
+    companion object {
+
+        const val ARGUMENT_PAGE = "ARGUMENT_PAGE"
     }
 
     private class Adapter(private val onClick: (Source) -> Unit) :

@@ -27,7 +27,11 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
             override fun getItemCount(): Int = pageList.size
 
             override fun createFragment(position: Int): Fragment {
-                return pageList[position].fragmentClass.newInstance()
+                return pageList[position].fragmentClass.newInstance().apply {
+                    arguments = Bundle().apply {
+                        putInt(PictureFlowFragment.ARGUMENT_PAGE, position)
+                    }
+                }
             }
         }
     }
@@ -73,15 +77,15 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
                 android.R.drawable.ic_menu_gallery,
             ),
             PageBean(
-                Fragment::class.java,
+                PictureFlowFragment::class.java,
                 com.xallery.common.R.drawable.ic_play,
             ),
             PageBean(
-                Fragment::class.java,
+                PictureFlowFragment::class.java,
                 com.xallery.common.R.drawable.ic_star,
             ),
             PageBean(
-                Fragment::class.java,
+                PictureFlowFragment::class.java,
                 com.xallery.common.R.drawable.ic_write_hover,
             ),
         )

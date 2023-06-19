@@ -12,25 +12,31 @@ import kotlinx.coroutines.launch
 
 class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
 
-    private val _dataFlow = MutableStateFlow<List<Source>?>(null)
+    private val _dataFlow = MutableStateFlow<Pair<Int, List<Source>?>?>(null)
     val dataFlow = _dataFlow.asStateFlow()
 
     private val mediaStoreFetcher = MediaStoreFetcher()
 
-    fun fetchPicture(isFirst: Boolean) = viewModelScope.launch {
+    fun fetchSource(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
         showLoading()
-
+        val filterType = when (requestCode) {
+            0 -> MediaStoreFetcher.FilterType.FILTER_ALL
+            1 -> MediaStoreFetcher.FilterType.FILTER_VIDEOS
+            2 -> MediaStoreFetcher.FilterType.FILTER_GIFS
+            else -> MediaStoreFetcher.FilterType.FILTER_ALL
+        }
         if (isFirst) {
             // ------------ pre fetch ------------
-            fetchSource(50)
+            fetchSource(requestCode, MediaStoreFetcher.QueryParams(filterType, queryNum = 50))
         }
 
-        fetchSource()
+        fetchSource(requestCode, MediaStoreFetcher.QueryParams(filterType))
     }.invokeOnCompletion {
         hideLoading()
     }
 
-    private fun fetchSource(fetchNum: Int = -1) = viewModelScope.launch {
-        _dataFlow.emit(mediaStoreFetcher.fetchSource(fetchNum))
-    }
+    private fun fetchSource(requestCode: Int, queryParams: MediaStoreFetcher.QueryParams) =
+        viewModelScope.launch {
+            _dataFlow.emit(requestCode to mediaStoreFetcher.fetchSource(queryParams))
+        }
 }

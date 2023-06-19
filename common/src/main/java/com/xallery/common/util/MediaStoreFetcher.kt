@@ -2,6 +2,7 @@ package com.xallery.common.util
 
 import android.content.ContentUris
 import android.provider.MediaStore
+import androidx.annotation.IntDef
 import com.xallery.common.reposity.constant.Constant
 import com.xallery.common.reposity.db.model.Source
 import com.xihh.base.android.appContext
@@ -17,9 +18,8 @@ import java.util.LinkedList
 
 class MediaStoreFetcher {
 
-
-    suspend fun fetchSource(fetchNum: Int = -1) = withContext(Dispatchers.IO) {
-        val filterMedia = Int.MAX_VALUE
+    suspend fun fetchSource(queryParams: QueryParams? = null) = withContext(Dispatchers.IO) {
+        val queryParams = queryParams ?: QueryParams()
         val queryUri = MediaStore.Files.getContentUri("external")
 
         val projection = arrayOf(
@@ -34,12 +34,10 @@ class MediaStoreFetcher {
             MediaStore.MediaColumns.DURATION
         )
 
-        val selections = getSelections(filterMedia)
-        val selectionsArgs = getSelectionArgs(filterMedia)
-        val sortColumn = MediaStore.Images.Media._ID
-        val isEsc = true
+        val (selections, selectionsArgs) = getSelectionAndArgs(queryParams.filterType)
 
-        val sortOrder = getSortOrder(fetchNum,sortColumn,isEsc)
+        val sortOrder =
+            getSortOrder(queryParams.queryNum, queryParams.sortColumn, queryParams.desc)
 
         appContext.contentResolver.query(
             queryUri,
@@ -66,7 +64,8 @@ class MediaStoreFetcher {
                     val path = cursor.getStringValue(MediaStore.Images.Media.DATA)
                     val size = cursor.getLongValue(MediaStore.Images.Media.SIZE)
                     val takenTimestamp = cursor.getLongValue(MediaStore.Images.Media.DATE_TAKEN)
-                    val addedTimestamp = cursor.getLongValue(MediaStore.Images.Media.DATE_ADDED) * 1000
+                    val addedTimestamp =
+                        cursor.getLongValue(MediaStore.Images.Media.DATE_ADDED) * 1000
                     val lastModifiedTimestamp =
                         cursor.getLongValue(MediaStore.Images.Media.DATE_MODIFIED) * 1000
                     val name = cursor.getStringValue(MediaStore.Images.Media.DISPLAY_NAME)
@@ -118,29 +117,49 @@ class MediaStoreFetcher {
         return builder.toString()
     }
 
-    private fun getSelections(filterMedia: Int): String {
-        val query = StringBuilder()
-        if (filterMedia and Constant.FileType.IMAGES != 0) {
-            query.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
-        }
-
-        if (filterMedia and Constant.FileType.VIDEOS != 0) {
-            query.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
-        }
-
-        return query.toString().trim().removeSuffix("OR")
-    }
-
-    private fun getSelectionArgs(filterMedia: Int): Array<String> {
+    private fun getSelectionAndArgs(@FilterType filterType: Int): Pair<String, Array<String>> {
+        val selection = StringBuilder()
         val args = LinkedList<String>()
-        if (filterMedia and Constant.FileType.IMAGES != 0) {
+        if (filterType and FilterType.FILTER_IMAGES != 0) {
+            selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
             args.add("${Constant.MimeType.IMAGE}%")
+        } else {
+            if (filterType and FilterType.FILTER_GIFS != 0) {
+                selection.append("${MediaStore.Images.Media.MIME_TYPE} = ? OR ")
+                args.add(Constant.MimeType.GIF)
+            }
         }
 
-        if (filterMedia and Constant.FileType.VIDEOS != 0) {
+        if (filterType and FilterType.FILTER_VIDEOS != 0) {
+            selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
             args.add("${Constant.MimeType.VIDEO}%")
         }
 
-        return args.toTypedArray()
+        return selection.trim().removeSuffix("OR").toString() to args.toTypedArray()
+    }
+
+    data class QueryParams(
+        @FilterType val filterType: Int = FilterType.FILTER_ALL,
+        val queryNum: Int = -1,
+        val sortColumn: String = MediaStore.Images.Media._ID,
+        val desc: Boolean = true
+    )
+
+    @IntDef(
+        value = [
+            FilterType.FILTER_IMAGES,
+            FilterType.FILTER_VIDEOS,
+            FilterType.FILTER_GIFS,
+            FilterType.FILTER_ALL,
+        ]
+    )
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class FilterType {
+        companion object {
+            const val FILTER_IMAGES = 1
+            const val FILTER_VIDEOS = 1 shl 1
+            const val FILTER_GIFS = 1 shl 2
+            const val FILTER_ALL = Int.MAX_VALUE
+        }
     }
 }

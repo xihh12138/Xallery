@@ -12,19 +12,10 @@ object Constant {
         const val COLUMN_COUNT = "COLUMN_COUNT"
     }
 
-    object FileType {
-        // media types
-        const val IMAGES = 1
-        const val VIDEOS = 1 shl 1
-        const val GIFS = 1 shl 2
-        const val RAWS = 1 shl 3
-        const val SVGS = 1 shl 4
-        const val PORTRAITS = 1 shl 5
-    }
-
     object MimeType {
         const val IMAGE = "image/"
         const val VIDEO = "video/"
+        const val GIF = "image/gif"
     }
 
     object Extension {
