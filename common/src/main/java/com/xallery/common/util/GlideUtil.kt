@@ -32,3 +32,26 @@ fun ImageView.loadUri(
         .apply(options)
         .into(this)
 }
+
+fun ImageView.loadPath(
+    path: String,
+    signature: Key? = null,
+    centerCrop: Boolean = true
+) {
+    val options = RequestOptions()
+        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+        .priority(Priority.LOW)
+        .format(DecodeFormat.PREFER_ARGB_8888)
+
+    if (signature != null) {
+        options.signature(signature)
+    }
+    if (centerCrop) {
+        options.centerCrop()
+    }
+
+    Glide.with(context)
+        .load(path)
+        .apply(options)
+        .into(this)
+}

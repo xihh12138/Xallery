@@ -11,6 +11,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
+import com.xihh.base.ui.FadedPageTransformer
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
 
@@ -41,6 +42,7 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
     override fun initView(savedInstanceState: Bundle?) {
         // ---------- 禁用滑动手势 ----------
         vb.viewpager.adapter = pagerAdapter
+        vb.viewpager.setPageTransformer(FadedPageTransformer())
         TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
             tab.setIcon(pageList[pos].iconStringRes)
         }.attach()

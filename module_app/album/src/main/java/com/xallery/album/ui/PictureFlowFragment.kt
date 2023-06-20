@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import com.xallery.album.databinding.FragmentPictureFlowBinding
 import com.xallery.album.databinding.ItemPictureFlowBinding
 import com.xallery.album.repo.PictureFlowViewModel
@@ -34,7 +35,8 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         super.adaptWindowInsets(insets)
     }
 
-    override fun getViewModel() = ViewModelProvider(this)[PictureFlowViewModel::class.java]
+    override fun getViewModel() =
+        ViewModelProvider(requireActivity())[PictureFlowViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
         initRV()
@@ -49,6 +51,19 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         vb.rv.adapter = adapter
         vb.rv.setItemViewCacheSize(count * 2)
         vb.rv.setHasFixedSize(true)
+        vb.rv.setRecycledViewPool(vm.imageRecyclerViewPool)
+        vb.rv.addOnScrollListener(object : OnScrollListener() {
+            private var hasDisallow = false
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (!hasDisallow && newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    hasDisallow = true
+                    recyclerView.requestDisallowInterceptTouchEvent(true)
+                }
+                if (!hasDisallow && newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    hasDisallow = false
+                }
+            }
+        })
 
         lifecycleScope.launch {
             vm.fetchSource(page, true)

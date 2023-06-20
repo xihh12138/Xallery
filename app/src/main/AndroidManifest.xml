@@ -24,6 +24,9 @@
         android:name="android.permission.MANAGE_MEDIA"
         tools:ignore="ProtectedPermissions" />
 
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
     <!-- from Android 11, we should define <queries> to make other apps visible to this app -->
     <queries>
         <intent>
@@ -52,16 +55,14 @@
 
     <application
         android:name="com.xallery.common.XalleryApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Xallery"
-        tools:targetApi="31">
+        android:theme="@style/Theme.Xallery">
         <activity
             android:name="com.xallery.main.ui.MainActivity"
             android:exported="true"

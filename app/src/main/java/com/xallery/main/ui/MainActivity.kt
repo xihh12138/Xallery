@@ -39,7 +39,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     @RequiresApi(Build.VERSION_CODES.S)
     private val requestManageMediaContract =
-        registerForActivityResult(object :ActivityResultContract<Unit,Unit>(){
+        registerForActivityResult(object : ActivityResultContract<Unit, Unit>() {
             override fun createIntent(context: Context, input: Unit): Intent {
                 return Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA)
                     .setData(Uri.parse("package:$packageName"))
@@ -53,8 +53,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     override fun initView(savedInstanceState: Bundle?) {
         initFragment(savedInstanceState)
-
-        acquirePermission()
     }
 
     private fun initFragment(savedInstanceState: Bundle?) {
@@ -72,12 +70,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 }
             }
         }
-        if (savedInstanceState == null) {
-            vm.addActionNow(MainViewModel.FLAG_MAIN)
+        lifecycleScope.launchWhenStarted {
+            if (acquirePermission()) {
+                if (savedInstanceState == null) {
+                    vm.addActionNow(MainViewModel.FLAG_MAIN)
+                }
+            }
+
         }
     }
 
-    private fun acquirePermission() = lifecycleScope.launchWhenResumed {
+    private suspend fun acquirePermission(): Boolean {
         val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -88,7 +91,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
             toast(R.string.no_permission)
             finish()
 
-            return@launchWhenResumed
+            return false
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -100,7 +103,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 toast(R.string.no_permission)
                 finish()
 
-                return@launchWhenResumed
+                return false
             }
         }
 
@@ -111,7 +114,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 toast(R.string.no_permission)
                 finish()
 
-                return@launchWhenResumed
+                return false
             }
         }
 
@@ -138,6 +141,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 }
             }
         }
+        
+        return true
     }
 
     override fun onNewIntent(intent: Intent?) {

@@ -18,11 +18,9 @@ data class Source(
     val modifiedTimestamp: Long,
     val name: String? = null,
     val album: String? = null,
-    val artist: String? = null,
     val width: Int? = null,
     val height: Int? = null,
     val durationMillis: Long? = null,
-    val sourceRotationDegrees: Int? = null,
 ){
 
     val key = ObjectKey(id)

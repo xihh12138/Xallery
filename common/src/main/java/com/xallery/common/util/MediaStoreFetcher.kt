@@ -24,13 +24,15 @@ class MediaStoreFetcher {
 
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.MIME_TYPE,
             MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.DATE_MODIFIED,
-            MediaStore.Images.Media.DATE_ADDED,
-            MediaStore.Images.Media.DATE_TAKEN,
             MediaStore.Images.Media.SIZE,
+            MediaStore.Images.Media.DATE_MODIFIED,
+            MediaStore.Images.Media.DATE_TAKEN,
+            MediaStore.Images.Media.DATE_ADDED,
+            MediaStore.Images.Media.DISPLAY_NAME,
+            MediaStore.MediaColumns.WIDTH,
+            MediaStore.MediaColumns.HEIGHT,
             MediaStore.MediaColumns.DURATION
         )
 
@@ -70,7 +72,6 @@ class MediaStoreFetcher {
                         cursor.getLongValue(MediaStore.Images.Media.DATE_MODIFIED) * 1000
                     val name = cursor.getStringValue(MediaStore.Images.Media.DISPLAY_NAME)
                     val album = cursor.getStringValueNullable(MediaStore.Images.Media.ALBUM)
-                    val artist = cursor.getStringValueNullable(MediaStore.Images.Media.ARTIST)
                     val width = cursor.getIntValueNullable(MediaStore.MediaColumns.WIDTH)
                     val height = cursor.getIntValueNullable(MediaStore.MediaColumns.HEIGHT)
                     val duration = cursor.getLongValueNullable(MediaStore.MediaColumns.DURATION)
@@ -86,10 +87,9 @@ class MediaStoreFetcher {
                         lastModifiedTimestamp,
                         name,
                         album,
-                        artist,
                         width,
                         height,
-                        duration
+                        duration,
                     )
                     logx { "fetchSource($i/$count): $source" }
                     sourceList.add(source)

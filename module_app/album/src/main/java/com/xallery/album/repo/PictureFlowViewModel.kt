@@ -2,6 +2,7 @@ package com.xallery.album.repo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.recyclerview.widget.RecyclerView.RecycledViewPool
 import com.xallery.common.reposity.db.model.Source
 import com.xallery.common.util.MediaStoreFetcher
 import com.xihh.base.delegate.ILoading
@@ -16,6 +17,10 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
     val dataFlow = _dataFlow.asStateFlow()
 
     private val mediaStoreFetcher = MediaStoreFetcher()
+
+    val imageRecyclerViewPool = RecycledViewPool().apply {
+        this.setMaxRecycledViews(0, 21)
+    }
 
     fun fetchSource(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
         showLoading()
