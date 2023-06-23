@@ -62,7 +62,7 @@ class PictureFlowAdapter(private val onClick: (PictureFlowViewModel.IItemBean) -
         } else if (bean is PictureFlowViewModel.SourceBean) {
             holder as SourceVH
 
-            holder.iv.loadUri(bean.source.uri, bean.source.key)
+            holder.iv.loadSource(bean.source)
             holder.iv.setOnClickListener {
                 onClick(bean)
             }

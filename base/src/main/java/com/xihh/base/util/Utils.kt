@@ -29,9 +29,11 @@ fun Context.goBrowser(url: String) {
 
 fun Context.goAppDetailPage() {
     try {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            .setData(Uri.fromParts("package", packageName, null))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
+            Uri.fromParts(
+                "package", packageName, null
+            )
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     } catch (e: Exception) {
         logf { "go AppDetailPage error: ${e.stackTraceToString()}" }
@@ -107,4 +109,23 @@ fun Calendar.setToDayStart(timeMills: Long? = null): Calendar {
     set(Calendar.SECOND, 0)
     set(Calendar.MILLISECOND, 0)
     return this
+}
+
+fun Long.toHMSString(): String {
+    val ans = StringBuilder()
+    var temp = this / 1000
+    val hour = temp / 3600
+    if (hour > 0) {
+        ans.append(String.format("%02d", hour))
+        ans.append(':')
+    }
+    temp %= 3600
+    val minute = temp / 60
+    ans.append(String.format("%02d", minute))
+    ans.append(':')
+    temp %= 60
+    val second = temp
+    ans.append(String.format("%02d", second))
+
+    return ans.toString()
 }

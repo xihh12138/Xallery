@@ -13,8 +13,8 @@ object Constant {
     }
 
     object MimeType {
-        const val IMAGE = "image/"
-        const val VIDEO = "video/"
+        const val IMAGE_START = "image/"
+        const val VIDEO_START = "video/"
         const val GIF = "image/gif"
     }
 

@@ -3,6 +3,7 @@ package com.xallery.common.util
 import android.content.ContentUris
 import android.provider.MediaStore
 import androidx.annotation.IntDef
+import androidx.exifinterface.media.ExifInterface
 import com.xallery.common.reposity.constant.Constant
 import com.xallery.common.reposity.db.model.Source
 import com.xihh.base.android.appContext
@@ -10,7 +11,7 @@ import com.xihh.base.util.getIntValueNullable
 import com.xihh.base.util.getLongValue
 import com.xihh.base.util.getLongValueNullable
 import com.xihh.base.util.getStringValue
-import com.xihh.base.util.getStringValueNullable
+import com.xihh.base.util.logf
 import com.xihh.base.util.logx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -56,7 +57,7 @@ class MediaStoreFetcher {
                     val id = cursor.getLongValue(MediaStore.Images.Media._ID)
                     val mimeType = cursor.getStringValue(MediaStore.Images.Media.MIME_TYPE)
 
-                    val contentUri = if (mimeType.startsWith(Constant.MimeType.VIDEO)) {
+                    val contentUri = if (mimeType.startsWith(Constant.MimeType.VIDEO_START)) {
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                     } else {
                         MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -71,10 +72,26 @@ class MediaStoreFetcher {
                     val lastModifiedTimestamp =
                         cursor.getLongValue(MediaStore.Images.Media.DATE_MODIFIED) * 1000
                     val name = cursor.getStringValue(MediaStore.Images.Media.DISPLAY_NAME)
-                    val album = cursor.getStringValueNullable(MediaStore.Images.Media.ALBUM)
+                    val lastSlash = path.lastIndexOf('/')
+                    val album = path.substring(path.lastIndexOf('/', lastSlash - 1) + 1, lastSlash)
                     val width = cursor.getIntValueNullable(MediaStore.MediaColumns.WIDTH)
                     val height = cursor.getIntValueNullable(MediaStore.MediaColumns.HEIGHT)
                     val duration = cursor.getLongValueNullable(MediaStore.MediaColumns.DURATION)
+                    val fd = try {
+                        appContext.contentResolver.openFileDescriptor(uri, "r")
+                    } catch (e: Exception) {
+                        logf { "fetchSource: openFileDescriptor失败 name=$name,mimeType=$mimeType,contentUri=$contentUri,uri=$uri,path=$path,size=$size" }
+                        null
+                    }
+                    val exif = if (fd != null) {
+                        ExifInterface(fd.fileDescriptor)
+                    } else {
+                        null
+                    }
+                    val latlng = exif?.getLatLong()
+                    logx { "fetchSource($i/$count): latlng=$latlng" }
+
+                    fd?.close()
 
                     val source = Source(
                         id,
@@ -89,9 +106,11 @@ class MediaStoreFetcher {
                         album,
                         width,
                         height,
+                        latlng?.get(0),
+                        latlng?.get(1),
                         duration,
                     )
-                    logx { "fetchSource($i/$count): $source" }
+//                    logx { "fetchSource($i/$count): $source" }
                     sourceList.add(source)
                     i++
                 } while (cursor.moveToNext())
@@ -122,7 +141,7 @@ class MediaStoreFetcher {
         val args = LinkedList<String>()
         if (filterType and FilterType.FILTER_IMAGES != 0) {
             selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
-            args.add("${Constant.MimeType.IMAGE}%")
+            args.add("${Constant.MimeType.IMAGE_START}%")
         } else {
             if (filterType and FilterType.FILTER_GIFS != 0) {
                 selection.append("${MediaStore.Images.Media.MIME_TYPE} = ? OR ")
@@ -132,7 +151,7 @@ class MediaStoreFetcher {
 
         if (filterType and FilterType.FILTER_VIDEOS != 0) {
             selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
-            args.add("${Constant.MimeType.VIDEO}%")
+            args.add("${Constant.MimeType.VIDEO_START}%")
         }
 
         return selection.trim().removeSuffix("OR").toString() to args.toTypedArray()

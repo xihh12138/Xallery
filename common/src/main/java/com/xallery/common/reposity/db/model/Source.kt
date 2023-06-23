@@ -20,12 +20,14 @@ data class Source(
     val album: String? = null,
     val width: Int? = null,
     val height: Int? = null,
+    val lat: Double? = null,
+    val lng: Double? = null,
     val durationMillis: Long? = null,
-){
+) {
 
     val key = ObjectKey(id)
 
-    val isImage = mimeType.startsWith(Constant.MimeType.IMAGE)
+    val isImage = mimeType.startsWith(Constant.MimeType.IMAGE_START)
 
-    val isVideo = mimeType.startsWith(Constant.MimeType.VIDEO)
+    val isVideo = mimeType.startsWith(Constant.MimeType.VIDEO_START)
 }

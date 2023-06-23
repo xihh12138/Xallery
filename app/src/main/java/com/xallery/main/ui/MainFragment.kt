@@ -2,11 +2,8 @@ package com.xallery.main.ui
 
 import android.graphics.Rect
 import android.os.Bundle
-import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.DrawableRes
 import androidx.core.view.marginBottom
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -16,7 +13,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.ui.FadedPageTransformer
-import com.xihh.base.util.logx
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
 
@@ -24,14 +20,6 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
     private val menuInflater = MainMenuInflater {
 
-    }
-
-    override fun adaptWindowInsets(insets: Rect) {
-        vb.appBar.updatePadding(top = insets.top)
-        vb.root.updatePadding(bottom = insets.bottom)
-        val new = Rect(insets)
-        new.bottom = (vb.indicator.height + vb.indicator.marginBottom)
-        super.adaptWindowInsets(new)
     }
 
     private val pagerAdapter by lazy {
@@ -46,6 +34,14 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
                 }
             }
         }
+    }
+
+    override fun adaptWindowInsets(insets: Rect) {
+        vb.appBar.updatePadding(top = insets.top)
+        vb.root.updatePadding(bottom = insets.bottom)
+        val new = Rect(insets)
+        new.bottom = (vb.indicator.height + vb.indicator.marginBottom)
+        super.adaptWindowInsets(new)
     }
 
     override fun getViewModel() = ViewModelProvider(requireActivity())[MainViewModel::class.java]
@@ -92,19 +88,19 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
         private val pageList = arrayListOf(
             PageBean(
                 PictureFlowFragment::class.java,
+                com.xallery.common.R.drawable.selector_ic_image_menu,
+            ),
+            PageBean(
+                PictureFlowFragment::class.java,
+                com.xallery.common.R.drawable.selector_ic_video_menu,
+            ),
+            PageBean(
+                PictureFlowFragment::class.java,
+                com.xallery.common.R.drawable.selector_ic_gif_menu,
+            ),
+            PageBean(
+                PictureFlowFragment::class.java,
                 android.R.drawable.ic_menu_gallery,
-            ),
-            PageBean(
-                PictureFlowFragment::class.java,
-                com.xallery.common.R.drawable.ic_play,
-            ),
-            PageBean(
-                PictureFlowFragment::class.java,
-                com.xallery.common.R.drawable.ic_star,
-            ),
-            PageBean(
-                PictureFlowFragment::class.java,
-                com.xallery.common.R.drawable.ic_write_hover,
             ),
         )
     }

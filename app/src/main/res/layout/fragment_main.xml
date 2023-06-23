@@ -9,7 +9,7 @@
         android:id="@+id/abl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_primary_bg_6"
+        android:background="@color/primary"
         android:orientation="vertical">
 
         <com.google.android.material.appbar.MaterialToolbar

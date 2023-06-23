@@ -94,7 +94,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
             return false
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val mediaLocationPermission = Manifest.permission.ACCESS_MEDIA_LOCATION
 
             if (!hasPermission(mediaLocationPermission) &&

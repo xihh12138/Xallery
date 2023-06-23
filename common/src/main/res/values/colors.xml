@@ -5,11 +5,11 @@
     <color name="black">#FF000000</color>
     <color name="black3">#333333</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="white_diable">#fcfcfe</color>
+    <color name="white_disable">#fcfcfe</color>
 
     <color name="red">#FF0000</color>
 
-    <color name="primary">#2F82FF</color>
+    <color name="primary">#DCE9FF</color>
     <color name="secondary">#4F95FF</color>
     <color name="primary_pressed">#1652EE</color>
     <color name="text_dark">#2C4EA6</color>
@@ -49,8 +49,6 @@
     <color name="primary_gradient_end_30">#bad4f5</color>
 
     <color name="view_background">#F5F5F7</color>
-
-    <color name="primary_background">#DCE9FF</color>
 
     <color name="divide_line">#D9D9D9</color>
 
