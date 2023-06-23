@@ -39,7 +39,7 @@ class MediaStoreFetcher {
         val (selections, selectionsArgs) = getSelectionAndArgs(queryParams.filterType)
 
         val sortOrder =
-            getSortOrder(queryParams.queryNum, queryParams.sortColumn, queryParams.desc)
+            getSortOrder(queryParams.resultNum, queryParams.sortColumn, queryParams.desc)
 
         appContext.contentResolver.query(
             queryUri,
@@ -97,7 +97,7 @@ class MediaStoreFetcher {
                 } while (cursor.moveToNext())
             }
             sourceList
-        }
+        } ?: arrayListOf()
     }
 
     private fun getSortOrder(fetchNum: Int, sortColumn: String, desc: Boolean): String {
@@ -140,7 +140,7 @@ class MediaStoreFetcher {
 
     data class QueryParams(
         @FilterType val filterType: Int = FilterType.FILTER_ALL,
-        val queryNum: Int = -1,
+        val resultNum: Int = -1,
         val sortColumn: String = MediaStore.Images.Media._ID,
         val desc: Boolean = true
     )

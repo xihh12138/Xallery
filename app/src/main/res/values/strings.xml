@@ -5,4 +5,9 @@
     <string name="alternative_media_access">你也可以只允许访问媒体文件。但那样的话将无法处理隐藏的文件。</string>
     <string name="all_files">所有文件</string>
     <string name="media_only">仅媒体文件</string>
+
+    <string name="menu_search">搜索</string>
+    <string name="menu_more">更多</string>
+    <string name="menu_filter">筛选</string>
+    <string name="menu_select">选择</string>
 </resources>

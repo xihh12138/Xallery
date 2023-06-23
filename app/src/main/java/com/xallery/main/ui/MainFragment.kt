@@ -2,8 +2,12 @@ package com.xallery.main.ui
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.DrawableRes
 import androidx.core.view.marginBottom
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -12,14 +16,21 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.ui.FadedPageTransformer
+import com.xihh.base.util.logx
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
 
 class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
+    private val menuInflater = MainMenuInflater {
+
+    }
+
     override fun adaptWindowInsets(insets: Rect) {
+        vb.appBar.updatePadding(top = insets.top)
+        vb.root.updatePadding(bottom = insets.bottom)
         val new = Rect(insets)
-        new.bottom += (vb.indicator.height + vb.indicator.marginBottom)
+        new.bottom = (vb.indicator.height + vb.indicator.marginBottom)
         super.adaptWindowInsets(new)
     }
 
@@ -40,12 +51,17 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
     override fun getViewModel() = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
-        // ---------- 禁用滑动手势 ----------
-        vb.viewpager.adapter = pagerAdapter
-        vb.viewpager.setPageTransformer(FadedPageTransformer())
-        TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
-            tab.setIcon(pageList[pos].iconStringRes)
-        }.attach()
+        if (savedInstanceState == null) {
+            // ------------ inflateAppBarMenu ------------
+            menuInflater.inflate(vb.appBar)
+
+            // ------------ inflate ViewPager ------------
+            vb.viewpager.adapter = pagerAdapter
+            vb.viewpager.setPageTransformer(FadedPageTransformer())
+            TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
+                tab.setIcon(pageList[pos].iconStringRes)
+            }.attach()
+        }
 
         lifecycleScope.launchWhenResumed {
             vm.mainPageFlow.collectLatest {

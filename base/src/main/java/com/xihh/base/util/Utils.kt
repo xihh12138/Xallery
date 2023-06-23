@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.util.Size
 import android.util.SizeF
 import org.json.JSONObject
+import java.util.Calendar
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
 
@@ -88,4 +89,22 @@ fun getMimeType(path: String?): String? {
         mmr.release()
     }
     return mime
+}
+
+fun getCurDayStartCalendar(): Calendar {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    return calendar
+}
+
+fun Calendar.setToDayStart(timeMills: Long? = null): Calendar {
+    timeMills?.let { timeInMillis = timeMills }
+    set(Calendar.HOUR_OF_DAY, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+    return this
 }

@@ -5,11 +5,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/abl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_primary_bg_6"
+        android:orientation="vertical">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_anchor="@id/viewpager"
+            app:layout_anchorGravity="top|center_horizontal"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:navigationIcon="@android:drawable/ic_menu_sort_by_size" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/indicator"
@@ -17,10 +35,13 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_margin="@dimen/dp_10"
-        android:alpha="0.8"
+        android:alpha="0.85"
         android:background="@drawable/bg_primary_bg_6"
         android:elevation="@dimen/dp_6"
         android:outlineSpotShadowColor="@color/primary_gray"
+        app:layout_anchor="@id/viewpager"
+        app:layout_anchorGravity="bottom|center_horizontal"
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
         app:tabIndicator="@null"
         app:tabUnboundedRipple="true" />
 
