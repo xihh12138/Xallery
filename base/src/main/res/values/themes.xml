@@ -14,8 +14,8 @@
     </style>
 
     <style name="anim_center_in_out">
-        <item name="android:windowEnterAnimation">@anim/center_in</item>
-        <item name="android:windowExitAnimation">@anim/center_out</item>
+        <item name="android:windowEnterAnimation">@anim/center_in_alpha</item>
+        <item name="android:windowExitAnimation">@anim/center_out_alpha</item>
     </style>
 
     <style name="Theme.NoTitle.Dialog" parent="android:style/Theme.Dialog">

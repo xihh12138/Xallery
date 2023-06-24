@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import com.xallery.album.databinding.FragmentPictureFlowBinding
 import com.xallery.album.repo.PictureFlowViewModel
+import com.xallery.common.reposity.RouteViewModel
+import com.xallery.common.reposity.db.model.Source
 import com.xallery.common.util.toast
+import com.xallery.picture.repo.PictureDetailsViewModel
 import com.xihh.base.android.BaseFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -18,12 +21,18 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
 
     private var page: Int = 0
 
-    private val adapter = PictureFlowAdapter {
-        toast(it.toString())
-    }
+    private val adapter = PictureFlowAdapter(
+        onTitleClick = {
+
+        },
+        onSourceClick = {
+//            toast(it.toString())
+            showPictureDetail(it.source)
+        }
+    )
 
     override fun getViewModel() =
-        ViewModelProvider(requireActivity())[PictureFlowViewModel::class.java]
+        ViewModelProvider(requireParentFragment())[PictureFlowViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
         initRV()
@@ -70,6 +79,13 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
                 }
             }
         }
+    }
+
+    private fun showPictureDetail(source: Source) {
+        ViewModelProvider(requireActivity())[PictureDetailsViewModel::class.java].updateCurSource(
+            source
+        )
+        ViewModelProvider(requireActivity())[RouteViewModel::class.java].addActionNow(RouteViewModel.ROUTE_PICTURE)
     }
 
     companion object {

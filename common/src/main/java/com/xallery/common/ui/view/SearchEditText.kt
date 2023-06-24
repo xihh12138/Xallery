@@ -1,4 +1,4 @@
-package com.xallery.common.ui
+package com.xallery.common.ui.view
 
 import android.content.Context
 import android.graphics.Canvas

@@ -13,12 +13,19 @@ import com.bumptech.glide.request.RequestOptions
 fun ImageView.loadUri(
     uri: Uri,
     signature: Key? = null,
-    centerCrop: Boolean = true
+    centerCrop: Boolean = true,
+    getThumbnail: Boolean = true
 ) {
     val options = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
         .priority(Priority.LOW)
         .format(DecodeFormat.PREFER_ARGB_8888)
+
+    if (getThumbnail) {
+        options.encodeQuality(thumbnailQuality)
+    } else {
+        options.encodeQuality(100)
+    }
 
     if (signature != null) {
         options.signature(signature)
@@ -55,3 +62,5 @@ fun ImageView.loadPath(
         .apply(options)
         .into(this)
 }
+
+var thumbnailQuality = 50

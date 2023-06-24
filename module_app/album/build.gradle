@@ -1,6 +1,10 @@
-apply plugin:'com.android.library'
-apply from:'../../common.gradle'
+apply plugin: 'com.android.library'
+apply from: '../../common.gradle'
 
 android {
     namespace 'com.xallery.album'
+}
+
+dependencies {
+    api project(':module_app:picture')
 }

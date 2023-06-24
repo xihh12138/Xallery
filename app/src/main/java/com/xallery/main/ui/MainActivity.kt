@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.xallery.common.reposity.RouteViewModel
 import com.xallery.common.reposity.config
 import com.xallery.common.ui.LoadingHost
 import com.xallery.common.ui.LoadingHostImpl
@@ -21,6 +22,7 @@ import com.xallery.common.ui.LottieHost
 import com.xallery.common.ui.LottieHostImpl
 import com.xallery.common.ui.view.CommonDialogFragment
 import com.xallery.common.util.toast
+import com.xallery.picture.ui.PictureDetailsFragment
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
 import com.xihh.base.util.hasManageMediaPermission
@@ -51,20 +53,37 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     private val vm by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
 
+    private val routeVm by lazy { ViewModelProvider(this)[RouteViewModel::class.java] }
+
     override fun initView(savedInstanceState: Bundle?) {
         initFragment(savedInstanceState)
     }
 
     private fun initFragment(savedInstanceState: Bundle?) {
         lifecycleScope.launch {
-            vm.getUserActionFlow().collect {
+            routeVm.getUserActionFlow().collect {
                 // ---------- 添加fragment ----------
                 when (it) {
-                    MainViewModel.FLAG_MAIN -> {
-                        vm.arrangeAction {
+                    RouteViewModel.ROUTE_MAIN -> {
+                        routeVm.arrangeAction {
                             supportFragmentManager.beginTransaction()
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                                 .replace(vb.container.id, MainFragment::class.java, null).commit()
+                        }
+                    }
+
+                    RouteViewModel.ROUTE_PICTURE -> {
+                        routeVm.arrangeAction {
+                            supportFragmentManager.beginTransaction()
+                                .setCustomAnimations(
+                                    com.xihh.base.R.anim.center_in_alpha_scale,
+                                    0,
+                                    0,
+                                    com.xihh.base.R.anim.center_out_alpha_scale
+                                )
+                                .add(vb.container.id, PictureDetailsFragment::class.java, null)
+                                .addToBackStack(PictureDetailsFragment::class.simpleName)
+                                .commit()
                         }
                     }
                 }
@@ -73,10 +92,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
         lifecycleScope.launchWhenStarted {
             if (acquirePermission()) {
                 if (savedInstanceState == null) {
-                    vm.addActionNow(MainViewModel.FLAG_MAIN)
+                    routeVm.addActionNow(RouteViewModel.ROUTE_MAIN)
                 }
             }
-
         }
     }
 
@@ -141,7 +159,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 }
             }
         }
-        
+
         return true
     }
 
@@ -155,7 +173,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     override fun onStart() {
         super.onStart()
-        vm.execAllPendingAction { it.invoke() }
+        routeVm.execAllPendingAction { it.invoke() }
     }
 
     override fun onDestroy() {
@@ -164,7 +182,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount > 0) {
-            vm.arrangeAction {
+            routeVm.arrangeAction {
                 super.onBackPressed()
             }
         }

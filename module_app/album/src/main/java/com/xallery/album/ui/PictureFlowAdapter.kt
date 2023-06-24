@@ -9,9 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xallery.album.databinding.ItemPictureFlowBinding
 import com.xallery.album.databinding.ItemPictureFlowGroupBinding
 import com.xallery.album.repo.PictureFlowViewModel
-import com.xallery.common.util.loadUri
 
-class PictureFlowAdapter(private val onClick: (PictureFlowViewModel.IItemBean) -> Unit) :
+class PictureFlowAdapter(
+    private val onTitleClick: (PictureFlowViewModel.GroupBean) -> Unit,
+    private val onSourceClick: (PictureFlowViewModel.SourceBean) -> Unit
+) :
     RecyclerView.Adapter<PictureFlowAdapter.IViewHolder>() {
 
     private val differ = AsyncListDiffer(this,
@@ -43,7 +45,11 @@ class PictureFlowAdapter(private val onClick: (PictureFlowViewModel.IItemBean) -
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         if (viewType == VIEW_TYPE_GROUP) {
             GroupVH(
-                ItemPictureFlowGroupBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                ItemPictureFlowGroupBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
             )
         } else {
             SourceVH(
@@ -64,7 +70,7 @@ class PictureFlowAdapter(private val onClick: (PictureFlowViewModel.IItemBean) -
 
             holder.iv.loadSource(bean.source)
             holder.iv.setOnClickListener {
-                onClick(bean)
+                onSourceClick(bean)
             }
         }
     }

@@ -62,12 +62,10 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
         lifecycleScope.launchWhenResumed {
             vm.mainPageFlow.collectLatest {
                 when (it) {
-                    MainViewModel.MAIN_PAGE_VOICEOVER -> goPage(0)
-                    MainViewModel.MAIN_PAGE_MY_VOICE, MainViewModel.MAIN_PAGE_VOICE_CLONING -> {
-                        goPage(1)
-                    }
-
-                    MainViewModel.MAIN_PAGE_MINE -> goPage(2)
+                    MainViewModel.MAIN_PAGE_ALL -> goPage(0)
+                    MainViewModel.MAIN_PAGE_GIF -> goPage(1)
+                    MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
+                    MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
                 }
             }
         }

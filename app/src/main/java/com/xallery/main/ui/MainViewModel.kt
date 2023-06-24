@@ -15,8 +15,7 @@ import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel(),
     ILoading by LoadingDelegate(),
-    IToast by ToastDelegate(),
-    UserActionDelegate by UserActionImpl(){
+    IToast by ToastDelegate(){
 
     private val _mainPageFlow = MutableStateFlow(0)
     val mainPageFlow = _mainPageFlow.asStateFlow()
@@ -26,20 +25,17 @@ class MainViewModel : ViewModel(),
     }
 
     companion object {
-        const val FLAG_MAIN = 1 shl 0
-
-        const val MAIN_PAGE_VOICEOVER = 0
-        const val MAIN_PAGE_VOICE_CLONING = 1
-        const val MAIN_PAGE_MY_VOICE = 2
-        const val MAIN_PAGE_MINE = 3
-
+        const val MAIN_PAGE_ALL = 0
+        const val MAIN_PAGE_MOVIE = 1
+        const val MAIN_PAGE_GIF = 2
+        const val MAIN_PAGE_ELSE = 3
     }
 }
 
 @IntDef(
-    MainViewModel.MAIN_PAGE_VOICEOVER,
-    MainViewModel.MAIN_PAGE_VOICE_CLONING,
-    MainViewModel.MAIN_PAGE_MY_VOICE,
-    MainViewModel.MAIN_PAGE_MINE
+    MainViewModel.MAIN_PAGE_ALL,
+    MainViewModel.MAIN_PAGE_MOVIE,
+    MainViewModel.MAIN_PAGE_GIF,
+    MainViewModel.MAIN_PAGE_ELSE
 )
 annotation class MainPageFlags
