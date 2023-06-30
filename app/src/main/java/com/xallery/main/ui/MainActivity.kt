@@ -8,10 +8,10 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.xallery.common.reposity.RouteViewModel
@@ -25,6 +25,7 @@ import com.xallery.common.util.toast
 import com.xallery.picture.ui.PictureDetailsFragment
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
+import com.xihh.base.delegate.RouteAction
 import com.xihh.base.util.hasManageMediaPermission
 import com.xihh.base.util.hasPermission
 import com.xihh.base.util.isExternalStorageManager
@@ -32,6 +33,7 @@ import com.xihh.base.util.launchGrantAllFilesIntent
 import com.xihh.xallery.R
 import com.xihh.xallery.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by LoadingHostImpl(),
     LottieHost by LottieHostImpl() {
@@ -61,28 +63,44 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
     private fun initFragment(savedInstanceState: Bundle?) {
         lifecycleScope.launch {
-            routeVm.getUserActionFlow().collect {
+            routeVm.getRouteActionFlow().collect {
                 // ---------- 添加fragment ----------
-                when (it) {
-                    RouteViewModel.ROUTE_MAIN -> {
+                when (it.flag) {
+                    RouteViewModel.ROUTE_FLAG_MAIN -> {
                         routeVm.arrangeAction {
                             supportFragmentManager.beginTransaction()
-                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                                .replace(vb.container.id, MainFragment::class.java, null).commit()
+                                .disallowAddToBackStack()
+                                .setReorderingAllowed(true)
+                                .add(
+                                    vb.container.id,
+                                    MainFragment::class.java,
+                                    null,
+                                    MainFragment::class.simpleName
+                                )
+                                .commit()
                         }
                     }
 
-                    RouteViewModel.ROUTE_PICTURE -> {
+                    RouteViewModel.ROUTE_FLAG_PICTURE -> {
                         routeVm.arrangeAction {
-                            supportFragmentManager.beginTransaction()
-                                .setCustomAnimations(
-                                    com.xihh.base.R.anim.center_in_alpha_scale,
-                                    0,
-                                    0,
-                                    com.xihh.base.R.anim.center_out_alpha_scale
+                            val view = (it.extras?.get("view") as WeakReference<*>).get() as View
+                            val t = supportFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .addSharedElement(view, view.transitionName)
+                                .replace(
+                                    vb.container.id,
+                                    PictureDetailsFragment::class.java,
+                                    null,
+                                    PictureDetailsFragment::class.simpleName
                                 )
-                                .add(vb.container.id, PictureDetailsFragment::class.java, null)
-                                .addToBackStack(PictureDetailsFragment::class.simpleName)
+//                                .add(
+//                                    vb.container.id,
+//                                    PictureDetailsFragment(),
+//                                    PictureDetailsFragment::class.simpleName
+//                                )
+//                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
+
+                            t.addToBackStack(PictureDetailsFragment::class.simpleName)
                                 .commit()
                         }
                     }
@@ -92,7 +110,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
         lifecycleScope.launchWhenStarted {
             if (acquirePermission()) {
                 if (savedInstanceState == null) {
-                    routeVm.addActionNow(RouteViewModel.ROUTE_MAIN)
+                    routeVm.addActionNow(RouteAction(RouteViewModel.ROUTE_FLAG_MAIN))
                 }
             }
         }

@@ -7,15 +7,13 @@ import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.IToast
 import com.xihh.base.delegate.LoadingDelegate
 import com.xihh.base.delegate.ToastDelegate
-import com.xihh.base.delegate.UserActionDelegate
-import com.xihh.base.delegate.UserActionImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel(),
     ILoading by LoadingDelegate(),
-    IToast by ToastDelegate(){
+    IToast by ToastDelegate() {
 
     private val _mainPageFlow = MutableStateFlow(0)
     val mainPageFlow = _mainPageFlow.asStateFlow()

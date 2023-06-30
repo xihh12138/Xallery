@@ -22,6 +22,8 @@ import java.util.Locale
 
 class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
 
+    private var hasLoadSource = false
+
     private val _dataFlow = MutableStateFlow<Pair<Int, List<IItemBean>?>?>(null)
     val dataFlow = _dataFlow.asStateFlow()
 
@@ -33,6 +35,9 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
     }
 
     fun fetchSource(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
+        if (hasLoadSource && _dataFlow.value != null) {
+            return@launch
+        }
         showLoading()
 
         val filterType = when (requestCode) {
@@ -47,6 +52,8 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
         }
 
         fetchSource(requestCode, MediaStoreFetcher.QueryParams(filterType))
+
+        hasLoadSource = true
     }.invokeOnCompletion {
         hideLoading()
     }
@@ -74,9 +81,7 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
                         GroupBean(
                             "${
                                 calendar.getDisplayName(
-                                    Calendar.MONTH,
-                                    Calendar.SHORT_FORMAT,
-                                    locale
+                                    Calendar.MONTH, Calendar.SHORT_FORMAT, locale
                                 )
                             }${
                                 calendar.get(Calendar.DAY_OF_MONTH)

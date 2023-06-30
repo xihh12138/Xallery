@@ -1,6 +1,9 @@
 package com.xallery.common.util
 
+import android.content.ContentResolver
 import android.content.ContentUris
+import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import androidx.annotation.IntDef
 import androidx.exifinterface.media.ExifInterface
@@ -11,11 +14,12 @@ import com.xihh.base.util.getIntValueNullable
 import com.xihh.base.util.getLongValue
 import com.xihh.base.util.getLongValueNullable
 import com.xihh.base.util.getStringValue
+import com.xihh.base.util.isVersionGreater
 import com.xihh.base.util.logf
-import com.xihh.base.util.logx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.LinkedList
+
 
 class MediaStoreFetcher {
 
@@ -39,16 +43,40 @@ class MediaStoreFetcher {
 
         val (selections, selectionsArgs) = getSelectionAndArgs(queryParams.filterType)
 
-        val sortOrder =
-            getSortOrder(queryParams.resultNum, queryParams.sortColumn, queryParams.desc)
-
-        appContext.contentResolver.query(
-            queryUri,
-            projection,
-            selections,
-            selectionsArgs,
-            sortOrder
-        )?.use { cursor ->
+        if (isVersionGreater(Build.VERSION_CODES.O)) {
+            val queryArgs = Bundle()
+            queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selections)
+            queryArgs.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionsArgs)
+            if (isVersionGreater(Build.VERSION_CODES.R)) {
+                queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
+                    getSortOrder(-1, queryParams.sortColumn, queryParams.desc)
+                )
+                queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_LIMIT,
+                    queryParams.resultNum.toString()
+                )
+            } else {
+                queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
+                    getSortOrder(queryParams.resultNum, queryParams.sortColumn, queryParams.desc)
+                )
+            }
+            appContext.contentResolver.query(
+                queryUri,
+                projection,
+                queryArgs,
+                null
+            )
+        } else {
+            appContext.contentResolver.query(
+                queryUri,
+                projection,
+                selections,
+                selectionsArgs,
+                getSortOrder(queryParams.resultNum, queryParams.sortColumn, queryParams.desc)
+            )
+        }?.use { cursor ->
             val count = cursor.count
             val sourceList = ArrayList<Source>(count)
             var i = 1
@@ -89,7 +117,6 @@ class MediaStoreFetcher {
                         null
                     }
                     val latlng = exif?.getLatLong()
-                    logx { "fetchSource($i/$count): latlng=$latlng" }
 
                     fd?.close()
 

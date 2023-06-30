@@ -25,7 +25,7 @@ class XalleryApp : BaseApplication(), CoroutineScope by MainScope(), AppBackgrou
         super.onCreate()
 
         val isMainProcess = ProcessUtil.isMainProcess(this)
-        logx { "VoxBoxApp: onCreate   isMainProcess=$isMainProcess" }
+        logx { "XalleryApp: onCreate   isMainProcess=$isMainProcess" }
         if (isMainProcess) {
             ActivityTask.addAppBackgroundListener(this)
             // 初始化 Toast 框架
@@ -47,7 +47,7 @@ class XalleryApp : BaseApplication(), CoroutineScope by MainScope(), AppBackgrou
             })
 
             Thread.setDefaultUncaughtExceptionHandler { t, e ->
-                logf { "VoxBoxApp:exception:thread=$t e=${e.stackTraceToString()}" }
+                logf { "XalleryApp:exception:thread=$t e=${e.stackTraceToString()}" }
                 throw e
             }
         }

@@ -9,11 +9,11 @@ import kotlinx.coroutines.launch
 
 class PictureDetailsViewModel : ViewModel() {
 
-    private val _curSourceFlow = MutableStateFlow<Source?>(null)
+    private val _curSourceFlow = MutableStateFlow<Pair<Source, Int>?>(null)
     val curSourceFlow = _curSourceFlow.asStateFlow()
 
-    fun updateCurSource(source: Source?) = viewModelScope.launch {
-        _curSourceFlow.emit(source)
+    fun updateCurSource(source: Source, position: Int) = viewModelScope.launch {
+        _curSourceFlow.emit(source to position)
     }
 
 }

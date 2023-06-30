@@ -9,10 +9,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xallery.album.databinding.ItemPictureFlowBinding
 import com.xallery.album.databinding.ItemPictureFlowGroupBinding
 import com.xallery.album.repo.PictureFlowViewModel
+import com.xihh.base.ui.AntiDitherClicker
 
 class PictureFlowAdapter(
     private val onTitleClick: (PictureFlowViewModel.GroupBean) -> Unit,
-    private val onSourceClick: (PictureFlowViewModel.SourceBean) -> Unit
+    private val onSourceClick: (View, Int, PictureFlowViewModel.SourceBean) -> Unit,
 ) :
     RecyclerView.Adapter<PictureFlowAdapter.IViewHolder>() {
 
@@ -69,9 +70,9 @@ class PictureFlowAdapter(
             holder as SourceVH
 
             holder.iv.loadSource(bean.source)
-            holder.iv.setOnClickListener {
-                onSourceClick(bean)
-            }
+            holder.iv.setOnClickListener(AntiDitherClicker {
+                onSourceClick(holder.iv, position, bean)
+            })
         }
     }
 

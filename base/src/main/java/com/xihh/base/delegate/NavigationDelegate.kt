@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.LinkedList
 
-interface UserActionDelegate {
+interface NavigationDelegate {
 
-    fun getUserActionFlow(): Flow<Int>
+    fun getRouteActionFlow(): Flow<RouteAction>
 
-    fun addActionNow(flag: Int)
+    fun addActionNow(action: RouteAction)
 
     val cannotCommitNow: Boolean
 
@@ -27,17 +27,17 @@ interface UserActionDelegate {
     fun arrangeAction(block: () -> Unit)
 }
 
-class UserActionImpl : UserActionDelegate {
+class NavigationImpl : NavigationDelegate {
 
-    private val _userActionFlow = MutableSharedFlow<Int>()
+    private val _userActionFlow = MutableSharedFlow<RouteAction>()
     private val userActionFlow = _userActionFlow.asSharedFlow()
 
     private val pendingActionQueue = LinkedList<() -> Unit>()
 
-    override fun getUserActionFlow() = userActionFlow
+    override fun getRouteActionFlow() = userActionFlow
 
-    override fun addActionNow(flag: Int) {
-        MainScope().launch { _userActionFlow.emit(flag) }
+    override fun addActionNow(action: RouteAction) {
+        MainScope().launch { _userActionFlow.emit(action) }
     }
 
     override val cannotCommitNow: Boolean
@@ -70,3 +70,8 @@ class UserActionImpl : UserActionDelegate {
         }
     }
 }
+
+data class RouteAction(
+    val flag: Int,
+    val extras: Map<String, Any>? = null
+)
