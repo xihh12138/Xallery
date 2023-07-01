@@ -87,18 +87,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                             val t = supportFragmentManager.beginTransaction()
                                 .setReorderingAllowed(true)
                                 .addSharedElement(view, view.transitionName)
-                                .replace(
-                                    vb.container.id,
-                                    PictureDetailsFragment::class.java,
-                                    null,
-                                    PictureDetailsFragment::class.simpleName
-                                )
-//                                .add(
+//                                .replace(
 //                                    vb.container.id,
-//                                    PictureDetailsFragment(),
+//                                    PictureDetailsFragment::class.java,
+//                                    null,
 //                                    PictureDetailsFragment::class.simpleName
 //                                )
-//                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
+                                .add(
+                                    vb.container.id,
+                                    PictureDetailsFragment(),
+                                    PictureDetailsFragment::class.simpleName
+                                )
+                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
 
                             t.addToBackStack(PictureDetailsFragment::class.simpleName)
                                 .commit()
