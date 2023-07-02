@@ -80,4 +80,36 @@ object ImmerseUtil {
         window.decorView.systemUiVisibility = systemUiVisibility
         window.navigationBarColor = Color.TRANSPARENT
     }
+
+    fun setStatusBarVisible(window: Window, isVisible: Boolean) {
+        var systemUiVisibility = window.decorView.systemUiVisibility
+        if (isVisible) {
+//            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY.inv()
+//            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE.inv()
+//            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_LAYOUT_STABLE.inv()
+//            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN.inv()
+            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
+//            systemUiVisibility = systemUiVisibility and View.SYSTEM_UI_FLAG_LOW_PROFILE.inv()
+
+//            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+//                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        } else {
+//            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+//            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE
+//            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_FULLSCREEN
+//            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_LOW_PROFILE
+
+//            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+//                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+//                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+//                    View.SYSTEM_UI_FLAG_LOW_PROFILE or
+//                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+//                    View.SYSTEM_UI_FLAG_IMMERSIVE
+        }
+        window.decorView.systemUiVisibility = systemUiVisibility
+    }
 }

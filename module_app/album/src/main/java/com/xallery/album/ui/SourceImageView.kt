@@ -77,7 +77,7 @@ class SourceImageView(context: Context, attrs: AttributeSet?) : AppCompatImageVi
                 )
                 d.draw(canvas)
             }
-        } else if (sourceUIInfo.mimeType.startsWith(Constant.MimeType.VIDEO_START)) {
+        } else if (sourceUIInfo.mimeType?.startsWith(Constant.MimeType.VIDEO_START) == true) {
             sourceUIInfo.durationMillis?.toHMSString()?.let { durationText ->
                 val fontMetricsInt = durationTextPaint.fontMetricsInt
                 val size = fontMetricsInt.descent - fontMetricsInt.ascent

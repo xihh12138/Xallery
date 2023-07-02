@@ -3,7 +3,7 @@ package com.xallery.album.repo.bean
 import com.xallery.common.reposity.db.model.Source
 
 data class SourceUIInfo(
-    val mimeType: String,
+    val mimeType: String?,
     val durationMillis: Long?,
     val location: String?
 ) {
