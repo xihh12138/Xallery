@@ -32,11 +32,9 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
 
     private var page: Int = 0
 
-
     private val adapter = PictureFlowAdapter(onTitleClick = {
 
     }, onSourceClick = { view, pos, bean ->
-//            toast(it.toString())
         showPictureDetailWithTransition(view, pos, bean.source)
     })
 
@@ -101,7 +99,8 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         detailsVm.updateCurSource(source, position)
         getRouter(requireActivity()).addActionNow(
             RouteAction(
-                RouteViewModel.ROUTE_FLAG_PICTURE, mapOf("view" to WeakReference(view))
+                RouteViewModel.ROUTE_FLAG_PICTURE,
+                mapOf("view" to WeakReference(view), "source" to source)
             )
         )
     }
@@ -145,7 +144,6 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
                 oldBottom: Int
             ) {
                 vb.rv.removeOnLayoutChangeListener(this)
-                requireParentFragment().startPostponedEnterTransition()
                 startPostponedEnterTransition()
                 val layoutManager: RecyclerView.LayoutManager = vb.rv.layoutManager ?: return
                 val pos = detailsVm.curSourceFlow.value?.second ?: return

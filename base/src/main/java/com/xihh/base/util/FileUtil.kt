@@ -4,20 +4,21 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
+import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.Environment
-import android.provider.BaseColumns
 import android.provider.MediaStore
-import android.webkit.MimeTypeMap
+import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
-import com.xihh.base.android.appContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 
 object FileUtil : IFileUtil {
@@ -42,6 +43,10 @@ object FileUtil : IFileUtil {
 
     fun getFileFromCache(context: Context, cacheType: String, fileName: String): File {
         return File(getCacheDir(context, cacheType), fileName)
+    }
+
+    fun getFileListFromCache(context: Context, cacheType: String): Array<File> {
+        return getCacheDir(context, cacheType).listFiles()!!
     }
 
     /**
@@ -90,7 +95,7 @@ object FileUtil : IFileUtil {
         context: Context,
         fileUri: Uri,
         targetDir: File? = null,
-        namePrefix: String? = null
+        namePrefix: String? = null,
     ): File {
         return withContext(context = Dispatchers.IO) {
             // ---------- 获取文件名字 ----------
@@ -141,50 +146,7 @@ object FileUtil : IFileUtil {
 
             else -> null
         }
-    }
 
-    fun getLatestFileFolders(num: Int): LinkedHashSet<String> {
-        val uri = MediaStore.Files.getContentUri("external")
-        val projection = arrayOf(MediaStore.Images.ImageColumns.DATA)
-        val parents = LinkedHashSet<String>()
-        var cursor: Cursor? = null
-        try {
-            if (isVersionGreater(Build.VERSION_CODES.R)) {
-                val bundle = Bundle().apply {
-                    putInt(ContentResolver.QUERY_ARG_LIMIT, num)
-                    putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, arrayOf(BaseColumns._ID))
-                    putInt(
-                        ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                        ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                    )
-                }
-
-                cursor = appContext.contentResolver.query(uri, projection, bundle, null)
-                if (cursor?.moveToFirst() == true) {
-                    do {
-                        val path =
-                            cursor.getStringValue(MediaStore.Images.ImageColumns.DATA) ?: continue
-                        parents.add(path.getParentPath())
-                    } while (cursor.moveToNext())
-                }
-            } else {
-                val sorting = "${BaseColumns._ID} DESC LIMIT $num"
-                cursor = appContext.contentResolver.query(uri, projection, null, null, sorting)
-                if (cursor?.moveToFirst() == true) {
-                    do {
-                        val path =
-                            cursor.getStringValue(MediaStore.Images.ImageColumns.DATA) ?: continue
-                        parents.add(path.getParentPath())
-                    } while (cursor.moveToNext())
-                }
-            }
-        } catch (e: Exception) {
-            logx { "getLatestFileFolders: e=${e.stackTraceToString()}" }
-        } finally {
-            cursor?.close()
-        }
-
-        return parents
     }
 
     /**
@@ -232,6 +194,8 @@ object FileUtil : IFileUtil {
                     target = File(target.parent, "$name ($i).$extension")
                     i++
                 }
+                target.createNewFile()
+                logf { "FileUtil: copyFileToMediaDir   target=$target" }
                 file.copyTo(target)
                 val uri = Uri.fromFile(target)
                 context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
@@ -265,8 +229,9 @@ object FileUtil : IFileUtil {
                     val relativePath = "${mediaInfo.externalDir}${File.separator}${dirName}"
                     values.put(MediaStore.Files.FileColumns.RELATIVE_PATH, relativePath)
                 }
+                logx { "Api29Impl: copyFileToMediaDir   insert values=$values" }
                 val resolver = context.contentResolver
-                val insertUri = resolver.insert(mediaInfo.externalUri, values)
+                val insertUri = resolver.insertReplace(mediaInfo, values)
                 if (insertUri != null) {
                     val fis = FileInputStream(oldFile)
                     var fos: OutputStream? = null
@@ -291,28 +256,54 @@ object FileUtil : IFileUtil {
             return@withContext null
         }
     }
+
+    private fun ContentResolver.insertReplace(mediaInfo: MediaInfo, values: ContentValues): Uri? {
+        val uri = mediaInfo.externalUri!!
+        return try {
+            insert(uri, values) ?: throw SQLiteConstraintException()
+        } catch (sqliteConstraintException: SQLiteConstraintException) {
+            val _data =
+                "%${values[MediaStore.Files.FileColumns.DISPLAY_NAME]}.${mediaInfo.extension}"
+            val where = "_data LIKE ?"
+            val args = arrayOf(_data)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val deleteBundle = bundleOf(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION to where,
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to args
+                    )
+                    delete(uri, deleteBundle)
+                } else {
+                    delete(uri, where, args)
+                }
+
+                insert(uri, values)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
 }
 
 data class MediaInfo(
     val mimeType: String?,
+    val extension: String?,
     val externalDir: String,
     val externalUri: Uri?,
 ) {
-    val extension: String?
-        get() = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-
     companion object {
         fun fromPath(path: String): MediaInfo {
             val mimeType = getMimeType(path)
+            val extension = getExtension(path)
 
             val externalDir = mapExternalDir(mimeType)
             val externalUri = mapExternalUri(mimeType)
 
-            return MediaInfo(mimeType, externalDir, externalUri)
+            return MediaInfo(mimeType, extension, externalDir, externalUri)
         }
 
         private fun mapExternalDir(mimeType: String?) = when {
-            mimeType == null -> Environment.DIRECTORY_DOCUMENTS
+            mimeType == null -> Environment.DIRECTORY_DOWNLOADS
             mimeType.contains("audio") -> Environment.DIRECTORY_MUSIC
             mimeType.contains("video") -> Environment.DIRECTORY_MOVIES
             mimeType.contains("image") -> Environment.DIRECTORY_PICTURES
@@ -320,7 +311,12 @@ data class MediaInfo(
         }
 
         private fun mapExternalUri(mimeType: String?) = when {
-            mimeType == null -> null
+            mimeType == null -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            } else {
+                null
+            }
+
             mimeType.contains("audio") -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             mimeType.contains("video") -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             mimeType.contains("image") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI

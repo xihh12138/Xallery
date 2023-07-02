@@ -11,8 +11,10 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Size
 import android.util.SizeF
+import android.webkit.MimeTypeMap
 import org.json.JSONObject
 import java.util.Calendar
+import java.util.regex.Pattern
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
 
@@ -29,11 +31,9 @@ fun Context.goBrowser(url: String) {
 
 fun Context.goAppDetailPage() {
     try {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
-            Uri.fromParts(
-                "package", packageName, null
-            )
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            .setData(Uri.fromParts("package", packageName, null))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     } catch (e: Exception) {
         logf { "go AppDetailPage error: ${e.stackTraceToString()}" }
@@ -78,21 +78,6 @@ fun Long.toFormatString(): String {
     return sb.toString()
 }
 
-fun getMimeType(path: String?): String? {
-    var mime: String? = null
-    path ?: return mime
-    val mmr = MediaMetadataRetriever()
-    try {
-        mmr.setDataSource(path)
-        mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE)
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        mmr.release()
-    }
-    return mime
-}
-
 fun getCurDayStartCalendar(): Calendar {
     val calendar = Calendar.getInstance()
     calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -128,4 +113,59 @@ fun Long.toHMSString(): String {
     ans.append(String.format("%02d", second))
 
     return ans.toString()
+}
+
+fun getExtension(path: String): String? {
+    return MimeTypeMap.getFileExtensionFromUrl(path).ifBlank { path.substringAfterLast(".") }
+}
+
+fun getMimeType(path: String?): String? {
+    var mime: String? = null
+    path ?: return mime
+    val mmr = MediaMetadataRetriever()
+    try {
+        mmr.setDataSource(path)
+        mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE)
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        mmr.release()
+    }
+    return mime
+}
+
+/**
+ * @return 返回媒体文件时长(毫秒)
+ **/
+fun getMediaDuration(path: String?): Long? {
+    var mime: Long? = null
+    path ?: return mime
+    val mmr = MediaMetadataRetriever()
+    try {
+        mmr.setDataSource(path)
+        mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        mmr.release()
+    }
+    return mime
+}
+
+fun String?.extractInt(defaultValue: Int = 0): Int {
+    if (this == null) return defaultValue
+    val matcher = Pattern.compile("-?\\d+").matcher(this)
+    while (matcher.find()) {
+        return matcher.group(0)?.toIntOrNull() ?: defaultValue
+    }
+    return defaultValue
+}
+
+fun String?.extractFloat(defaultValue: Float): Float {
+    if (this == null) return defaultValue
+    val matcher = Pattern.compile("-?\\d+.\\d+").matcher(this)
+    while (matcher.find()) {
+        return matcher.group(0)?.toFloatOrNull() ?: defaultValue
+    }
+    return defaultValue
 }

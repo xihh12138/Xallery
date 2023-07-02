@@ -16,13 +16,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.xallery.common.reposity.RouteViewModel
 import com.xallery.common.reposity.config
+import com.xallery.common.reposity.db.model.Source
 import com.xallery.common.ui.LoadingHost
 import com.xallery.common.ui.LoadingHostImpl
 import com.xallery.common.ui.LottieHost
 import com.xallery.common.ui.LottieHostImpl
 import com.xallery.common.ui.view.CommonDialogFragment
 import com.xallery.common.util.toast
-import com.xallery.picture.ui.PictureDetailsFragment
+import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
 import com.xihh.base.delegate.RouteAction
@@ -45,13 +46,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
     private val requestManageMediaContract =
         registerForActivityResult(object : ActivityResultContract<Unit, Unit>() {
             override fun createIntent(context: Context, input: Unit): Intent {
-                return Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA)
-                    .setData(Uri.parse("package:$packageName"))
+                return Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA).setData(Uri.parse("package:$packageName"))
             }
 
             override fun parseResult(resultCode: Int, intent: Intent?) {
             }
         })
+
+    private val sourceDetailLauncher =
+        registerForActivityResult(SourceDetailActivity.TransitionLauncher()) {
+
+        }
 
     private val vm by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
 
@@ -68,40 +73,39 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 when (it.flag) {
                     RouteViewModel.ROUTE_FLAG_MAIN -> {
                         routeVm.arrangeAction {
-                            supportFragmentManager.beginTransaction()
-                                .disallowAddToBackStack()
-                                .setReorderingAllowed(true)
-                                .add(
+                            supportFragmentManager.beginTransaction().disallowAddToBackStack()
+                                .setReorderingAllowed(true).add(
                                     vb.container.id,
                                     MainFragment::class.java,
                                     null,
                                     MainFragment::class.simpleName
-                                )
-                                .commit()
+                                ).commit()
                         }
                     }
 
                     RouteViewModel.ROUTE_FLAG_PICTURE -> {
                         routeVm.arrangeAction {
+                            val source = it.extras?.get("source") as Source
                             val view = (it.extras?.get("view") as WeakReference<*>).get() as View
-                            val t = supportFragmentManager.beginTransaction()
-                                .setReorderingAllowed(true)
-                                .addSharedElement(view, view.transitionName)
-//                                .replace(
+                            sourceDetailLauncher.launch(source to view)
+//                            val t = supportFragmentManager.beginTransaction()
+//                                .setReorderingAllowed(true)
+//                                .addSharedElement(view, view.transitionName)
+////                                .replace(
+////                                    vb.container.id,
+////                                    PictureDetailsFragment::class.java,
+////                                    null,
+////                                    PictureDetailsFragment::class.simpleName
+////                                )
+//                                .add(
 //                                    vb.container.id,
-//                                    PictureDetailsFragment::class.java,
-//                                    null,
+//                                    PictureDetailsFragment(),
 //                                    PictureDetailsFragment::class.simpleName
 //                                )
-                                .add(
-                                    vb.container.id,
-                                    PictureDetailsFragment(),
-                                    PictureDetailsFragment::class.simpleName
-                                )
-                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
-
-                            t.addToBackStack(PictureDetailsFragment::class.simpleName)
-                                .commit()
+//                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
+//
+//                            t.addToBackStack(PictureDetailsFragment::class.simpleName)
+//                                .commit()
                         }
                     }
                 }
@@ -133,8 +137,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val mediaLocationPermission = Manifest.permission.ACCESS_MEDIA_LOCATION
 
-            if (!hasPermission(mediaLocationPermission) &&
-                !permissionContract.get(mediaLocationPermission)
+            if (!hasPermission(mediaLocationPermission) && !permissionContract.get(
+                    mediaLocationPermission
+                )
             ) {
                 toast(R.string.no_permission)
                 finish()
@@ -192,10 +197,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
     override fun onStart() {
         super.onStart()
         routeVm.execAllPendingAction { it.invoke() }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     override fun onBackPressed() {

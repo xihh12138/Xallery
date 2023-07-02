@@ -45,7 +45,11 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity(), OnGlobalLay
         adaptWindowInsets(insets)
     }
 
+    open fun onPrepareAnimation() {
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        onPrepareAnimation()
         super.onCreate(savedInstanceState)
         transparentSystemBar(window)
         applySystemBarIsLight(true)
