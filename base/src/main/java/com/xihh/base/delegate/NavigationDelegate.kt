@@ -10,9 +10,9 @@ import java.util.LinkedList
 
 interface NavigationDelegate {
 
-    fun getRouteActionFlow(): Flow<RouteAction>
+    fun getRouteActionFlow(): Flow<NavAction>
 
-    fun addActionNow(action: RouteAction)
+    fun addActionNow(action: NavAction)
 
     val cannotCommitNow: Boolean
 
@@ -29,14 +29,14 @@ interface NavigationDelegate {
 
 class NavigationImpl : NavigationDelegate {
 
-    private val _userActionFlow = MutableSharedFlow<RouteAction>()
+    private val _userActionFlow = MutableSharedFlow<NavAction>()
     private val userActionFlow = _userActionFlow.asSharedFlow()
 
     private val pendingActionQueue = LinkedList<() -> Unit>()
 
     override fun getRouteActionFlow() = userActionFlow
 
-    override fun addActionNow(action: RouteAction) {
+    override fun addActionNow(action: NavAction) {
         MainScope().launch { _userActionFlow.emit(action) }
     }
 
@@ -71,7 +71,9 @@ class NavigationImpl : NavigationDelegate {
     }
 }
 
-data class RouteAction(
+data class NavAction(
     val flag: Int,
     val extras: Map<String, Any>? = null
-)
+) {
+    constructor(flag: Int, vararg pair: Pair<String, Any>) : this(flag, mapOf(*pair))
+}

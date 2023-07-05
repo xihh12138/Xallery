@@ -26,11 +26,8 @@ import com.xallery.common.util.toast
 import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
-import com.xihh.base.delegate.RouteAction
-import com.xihh.base.util.hasManageMediaPermission
-import com.xihh.base.util.hasPermission
-import com.xihh.base.util.isExternalStorageManager
-import com.xihh.base.util.launchGrantAllFilesIntent
+import com.xihh.base.delegate.NavAction
+import com.xihh.base.util.*
 import com.xihh.xallery.R
 import com.xihh.xallery.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
@@ -115,7 +112,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
             if (savedInstanceState == null) {
                 acquirePermission {
                     vm.fetchAllSource()
-                    routeVm.addActionNow(RouteAction(RouteViewModel.ROUTE_FLAG_MAIN))
+                    routeVm.addActionNow(NavAction(RouteViewModel.ROUTE_FLAG_MAIN))
                 }
             }
         }
@@ -129,6 +126,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
         }
 
         if (!hasPermission(storagePermission) && !permissionContract.get(storagePermission)) {
+            logx { "MainActivity: acquirePermission   hasn't Permission 1" }
             toast(R.string.no_permission)
             finish()
 
@@ -142,6 +140,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                     mediaLocationPermission
                 )
             ) {
+                logx { "MainActivity: acquirePermission   hasn't Permission 2" }
                 toast(R.string.no_permission)
                 finish()
 
@@ -153,6 +152,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
             val videoPermission = Manifest.permission.READ_MEDIA_VIDEO
             if (!hasPermission(videoPermission) && !permissionContract.get(videoPermission)) {
+                logx { "MainActivity: acquirePermission   hasn't Permission 3" }
                 toast(R.string.no_permission)
                 finish()
 

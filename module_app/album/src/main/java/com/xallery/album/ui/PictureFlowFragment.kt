@@ -22,8 +22,9 @@ import com.xallery.common.repository.db.model.Source
 import com.xallery.common.repository.getRouter
 import com.xallery.picture.repo.PictureDetailsViewModel
 import com.xihh.base.android.BaseFragment
-import com.xihh.base.delegate.RouteAction
+import com.xihh.base.delegate.NavAction
 import com.xihh.base.util.logx
+import com.xihh.base.util.scrollToFullVisible
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
@@ -38,19 +39,40 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         showPictureDetailWithTransition(view, pos, bean.source)
     })
 
-    override fun getViewModel() = ViewModelProvider(this)[PictureFlowViewModel::class.java]
+    override fun getViewModel() =
+        ViewModelProvider(requireParentFragment())[PictureFlowViewModel::class.java]
 
     private val detailsVm by lazy { ViewModelProvider(requireActivity())[PictureDetailsViewModel::class.java] }
 
     override fun initView(savedInstanceState: Bundle?) {
+        page = arguments?.getInt(ARGUMENT_PAGE, page) ?: 0
         initRV()
 
-        lifecycleScope.launch {
-            vm.getSourceList(page, true)
-            vm.dataFlow.collectLatest {
-                if (it?.first == page) {
-                    it.second?.let { it1 ->
-                        adapter.updateData(it1)
+        lifecycleScope.apply {
+            launch {
+                vm.refreshSourceList(page, true)
+                vm.dataFlow.collectLatest {
+                    if (it?.first == page) {
+                        it.second?.let { it1 ->
+                            adapter.updateData(it1)
+                        }
+                    }
+                }
+            }
+            launch {
+                vm.userActionFlow.collectLatest {
+                    val extra = it.extras ?: return@collectLatest
+                    if (extra[PictureFlowViewModel.USER_ACTION_KEY_REQUEST_CODE] != page) {
+                        return@collectLatest
+                    }
+                    when (it.flag) {
+                        PictureFlowViewModel.USER_ACTION_JUMP_POS -> {
+                            vb.rv.scrollToFullVisible(extra[PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS] as Int)
+                        }
+
+                        PictureFlowViewModel.USER_ACTION_REFRESH -> {
+                            vm.refreshSourceList(page, false)
+                        }
                     }
                 }
             }
@@ -60,8 +82,6 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
     }
 
     private fun initRV() {
-        page = arguments?.getInt(ARGUMENT_PAGE, page) ?: 0
-
         val count =
             requireContext().resources.getInteger(com.xallery.common.R.integer.album_column_count)
         vb.rv.layoutManager = GridLayoutManager(requireContext(), count).apply {
@@ -98,7 +118,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         view.transitionName = source.id.toString()
         detailsVm.updateCurSource(source, position)
         getRouter(requireActivity()).addActionNow(
-            RouteAction(
+            NavAction(
                 RouteViewModel.ROUTE_FLAG_PICTURE,
                 mapOf("view" to WeakReference(view), "source" to source)
             )
@@ -118,7 +138,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         // A similar mapping is set at the ImagePagerFragment with a setEnterSharedElementCallback.
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(
-                names: List<String>, sharedElements: MutableMap<String, View>
+                names: List<String>, sharedElements: MutableMap<String, View>,
             ) {
                 // Locate the ViewHolder for the clicked position.
                 val pos = detailsVm.curSourceFlow.value?.second ?: return
@@ -141,20 +161,13 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
                 oldLeft: Int,
                 oldTop: Int,
                 oldRight: Int,
-                oldBottom: Int
+                oldBottom: Int,
             ) {
                 vb.rv.removeOnLayoutChangeListener(this)
                 startPostponedEnterTransition()
-                val layoutManager: RecyclerView.LayoutManager = vb.rv.layoutManager ?: return
+
                 val pos = detailsVm.curSourceFlow.value?.second ?: return
-                val view = vb.rv.findViewHolderForAdapterPosition(pos)?.itemView
-                // Scroll to position if the view for the current position is null (not currently part of
-                // layout manager children), or it's not completely visible.
-                if (view == null || layoutManager.isViewPartiallyVisible(view, false, true)) {
-                    vb.rv.post {
-                        vb.rv.scrollToPosition(pos)
-                    }
-                }
+                vb.rv.scrollToFullVisible(pos)
             }
         })
     }
@@ -177,7 +190,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         logx { "onCreateView: PictureFlowFragment" }
         return super.onCreateView(inflater, container, savedInstanceState)

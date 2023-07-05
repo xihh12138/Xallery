@@ -17,8 +17,7 @@ import java.util.*
 
 class MediaStoreFetcher {
 
-    suspend fun fetchSource(queryParams: QueryParams? = null) = withContext(Dispatchers.IO) {
-        val queryParams = queryParams ?: QueryParams()
+    suspend fun fetchSource(queryParams: QueryParams) = withContext(Dispatchers.IO) {
         val queryUri = MediaStore.Files.getContentUri("external")
 
         val projection = arrayOf(
@@ -46,10 +45,12 @@ class MediaStoreFetcher {
                     ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
                     getSortOrder(-1, queryParams.sortColumn, queryParams.desc)
                 )
-                queryArgs.putString(
-                    ContentResolver.QUERY_ARG_SQL_LIMIT,
-                    queryParams.resultNum.toString()
-                )
+                if (queryParams.resultNum != -1) {
+                    queryArgs.putString(
+                        ContentResolver.QUERY_ARG_SQL_LIMIT,
+                        queryParams.resultNum.toString()
+                    )
+                }
             } else {
                 queryArgs.putString(
                     ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
@@ -131,7 +132,7 @@ class MediaStoreFetcher {
         } ?: arrayListOf()
     }
 
-    private fun getSortOrder(fetchNum: Int, sortColumn: String, desc: Boolean): String {
+    private fun getSortOrder(fetchNum: Int, sortColumn: String?, desc: Boolean): String {
         val builder = StringBuilder()
 
         builder.append(sortColumn)

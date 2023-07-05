@@ -14,13 +14,18 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import com.google.android.material.tabs.TabLayoutMediator
+import com.xallery.album.repo.PictureFlowViewModel
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
+import com.xihh.base.delegate.NavAction
 import com.xihh.base.ui.FadedPageTransformer
 import com.xihh.base.util.logx
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
@@ -42,6 +47,8 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
         }
     }
 
+    private val pictureFlowVM by lazy { ViewModelProvider(this)[PictureFlowViewModel::class.java] }
+
     override fun adaptWindowInsets(insets: Rect) {
         vb.appBar.updatePadding(top = insets.top)
         vb.root.updatePadding(bottom = insets.bottom)
@@ -62,14 +69,33 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
             TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
                 tab.setIcon(pageList[pos].iconStringRes)
             }.attach()
+            vb.indicator.addOnTabSelectedListener(object : OnTabSelectedListener {
+                override fun onTabSelected(tab: TabLayout.Tab) {
+                }
 
-            lifecycleScope.launchWhenResumed {
-                vm.mainPageFlow.collectLatest {
-                    when (it) {
-                        MainViewModel.MAIN_PAGE_ALL -> goPage(0)
-                        MainViewModel.MAIN_PAGE_GIF -> goPage(1)
-                        MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
-                        MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
+                override fun onTabUnselected(tab: TabLayout.Tab) {
+                }
+
+                override fun onTabReselected(tab: TabLayout.Tab) {
+                    pictureFlowVM.postAction(
+                        NavAction(
+                            PictureFlowViewModel.USER_ACTION_JUMP_POS,
+                            PictureFlowViewModel.USER_ACTION_KEY_REQUEST_CODE to tab.position,
+                            PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS to 0
+                        )
+                    )
+                }
+            })
+
+            lifecycleScope.apply {
+                launch {
+                    vm.mainPageFlow.collectLatest {
+                        when (it) {
+                            MainViewModel.MAIN_PAGE_ALL -> goPage(0)
+                            MainViewModel.MAIN_PAGE_GIF -> goPage(1)
+                            MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
+                            MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
+                        }
                     }
                 }
             }
@@ -120,7 +146,7 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         logx { "onCreateView: MainFragment" }
         return super.onCreateView(inflater, container, savedInstanceState)

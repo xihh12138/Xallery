@@ -10,6 +10,8 @@ object Constant {
     object SPKey {
         const val HAS_ACCESS_STORAGE = "HAS_ACCESS_STORAGE"
         const val COLUMN_COUNT = "COLUMN_COUNT"
+        const val IS_SORT_DESC = "IS_SORT_DESC"
+        const val SORT_COLUMN = "SORT_COLUMN"
     }
 
     object MimeType {

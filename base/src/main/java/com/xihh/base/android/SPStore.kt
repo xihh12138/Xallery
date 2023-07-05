@@ -37,7 +37,7 @@ class SPStore(context: Context, name: String, mode: SPStoreMode) {
 
     fun getString(key: String, defaultValue: String? = null): String? {
         val value = mSharedPreferences.getString(key, defaultValue)
-        return if (TextUtils.isEmpty(value)) {
+        return if (value.isNullOrEmpty()) {
             defaultValue
         } else value
     }

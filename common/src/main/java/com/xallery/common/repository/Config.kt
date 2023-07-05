@@ -16,10 +16,29 @@ class Config internal constructor() {
 
     var hasAccessStorage: Boolean
         get() = sp.getBoolean(Constant.SPKey.HAS_ACCESS_STORAGE, false)
-        set(value) = sp.edit().putBoolean(Constant.SPKey.HAS_ACCESS_STORAGE, value).async()
+        set(value) {
+            sp.edit().putBoolean(Constant.SPKey.HAS_ACCESS_STORAGE, value).sync()
+        }
 
     var columnNum: Int
-        get() = sp.getInt(Constant.SPKey.COLUMN_COUNT, appContext.resources.getInteger(R.integer.album_column_count))
-        set(value) = sp.edit().putInt(Constant.SPKey.COLUMN_COUNT, value).async()
+        get() = sp.getInt(
+            Constant.SPKey.COLUMN_COUNT,
+            appContext.resources.getInteger(R.integer.album_column_count)
+        )
+        set(value) {
+            sp.edit().putInt(Constant.SPKey.COLUMN_COUNT, value).sync()
+        }
+
+    var sortColumn: String
+        get() = sp.getString(Constant.SPKey.SORT_COLUMN, "id")!!
+        set(value) {
+            sp.edit().putString(Constant.SPKey.SORT_COLUMN, value).sync()
+        }
+
+    var isSortDesc: Boolean
+        get() = sp.getBoolean(Constant.SPKey.IS_SORT_DESC, true)
+        set(value) {
+            sp.edit().putBoolean(Constant.SPKey.IS_SORT_DESC, value).sync()
+        }
 
 }

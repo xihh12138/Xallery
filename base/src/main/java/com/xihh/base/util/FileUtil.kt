@@ -14,11 +14,7 @@ import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 
 
 object FileUtil : IFileUtil {
@@ -31,7 +27,6 @@ object FileUtil : IFileUtil {
         val dir = when (type) {
             DIR_TYPE_EXTERNAL -> context.getExternalFilesDir(docName)
                 ?: File(context.externalCacheDir, docName)
-
             DIR_TYPE_EXTERNAL_CACHE -> File(context.externalCacheDir, docName)
             else -> File(context.cacheDir, docName)
         }
@@ -134,7 +129,6 @@ object FileUtil : IFileUtil {
             ContentResolver.SCHEME_FILE -> {
                 File(uri.path).length()
             }
-
             ContentResolver.SCHEME_CONTENT -> {
                 try {
                     context.contentResolver.openFileDescriptor(uri, "r")?.statSize
@@ -143,7 +137,6 @@ object FileUtil : IFileUtil {
                     null
                 }
             }
-
             else -> null
         }
 
@@ -160,8 +153,9 @@ object FileUtil : IFileUtil {
         file: String,
         name: String,
         dirName: String,
+        videoSaveToCamera: Boolean,
     ): Uri? {
-        val mediaInfo = MediaInfo.fromPath(file)
+        val mediaInfo = MediaInfo.fromPath(file, videoSaveToCamera)
 
         return Api29Impl.copyFileToMediaDir(context, file, name, dirName, mediaInfo)
             ?: copyFileToMediaDir(context, file, name, dirName, mediaInfo)
@@ -182,11 +176,12 @@ object FileUtil : IFileUtil {
     ): Uri? = withContext(Dispatchers.IO) {
         try {
             Environment.getExternalStoragePublicDirectory(mediaInfo.externalDir)?.let {
-                val dir = File(it, dirName)
-                if (!dir.exists()) {
-                    dir.mkdirs()
-                }
                 val file = File(file)
+                val dir = File(it, dirName).also {
+                    if (!it.exists()) {
+                        it.mkdirs()
+                    }
+                }
                 val extension = mediaInfo.extension ?: ""
                 var target = File(dir, "$name.$extension")
                 var i = 1
@@ -220,13 +215,22 @@ object FileUtil : IFileUtil {
                 mediaInfo.externalUri ?: return@withContext null
 
                 val oldFile = File(file)
+                val name = if (mediaInfo.mimeType == null) {
+                    "$name.${mediaInfo.extension}"
+                } else {
+                    name
+                }
                 //设置目标文件的信息
                 val values = ContentValues()
+                values.put(MediaStore.Files.FileColumns.DATA, file)
+                values.put(
+                    MediaStore.Files.FileColumns.DATE_ADDED, System.currentTimeMillis() / 1000
+                )
                 values.put(MediaStore.Files.FileColumns.DISPLAY_NAME, name)
                 values.put(MediaStore.Files.FileColumns.TITLE, name)
                 values.put(MediaStore.Files.FileColumns.MIME_TYPE, mediaInfo.mimeType)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val relativePath = "${mediaInfo.externalDir}${File.separator}${dirName}"
+                    val relativePath = File(mediaInfo.externalDir, dirName).path
                     values.put(MediaStore.Files.FileColumns.RELATIVE_PATH, relativePath)
                 }
                 logx { "Api29Impl: copyFileToMediaDir   insert values=$values" }
@@ -292,20 +296,20 @@ data class MediaInfo(
     val externalUri: Uri?,
 ) {
     companion object {
-        fun fromPath(path: String): MediaInfo {
+        fun fromPath(path: String, videoSaveToCamera: Boolean): MediaInfo {
             val mimeType = getMimeType(path)
             val extension = getExtension(path)
 
-            val externalDir = mapExternalDir(mimeType)
+            val externalDir = mapExternalDir(mimeType, videoSaveToCamera)
             val externalUri = mapExternalUri(mimeType)
 
             return MediaInfo(mimeType, extension, externalDir, externalUri)
         }
 
-        private fun mapExternalDir(mimeType: String?) = when {
+        private fun mapExternalDir(mimeType: String?, videoSaveToCamera: Boolean) = when {
             mimeType == null -> Environment.DIRECTORY_DOWNLOADS
             mimeType.contains("audio") -> Environment.DIRECTORY_MUSIC
-            mimeType.contains("video") -> Environment.DIRECTORY_MOVIES
+            mimeType.contains("video") -> if (videoSaveToCamera) Environment.DIRECTORY_DCIM else Environment.DIRECTORY_MOVIES
             mimeType.contains("image") -> Environment.DIRECTORY_PICTURES
             else -> Environment.DIRECTORY_DOWNLOADS
         }
@@ -316,7 +320,6 @@ data class MediaInfo(
             } else {
                 null
             }
-
             mimeType.contains("audio") -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             mimeType.contains("video") -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             mimeType.contains("image") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI

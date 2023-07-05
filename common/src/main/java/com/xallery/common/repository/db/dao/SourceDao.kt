@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.xallery.common.repository.db.model.Source
 
 @Dao
@@ -29,29 +31,8 @@ interface SourceDao {
 
     //<editor-fold desc="查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查">
 
-    @Query("SELECT * FROM Source ORDER BY :sortBy")
-    suspend fun getAllSort(sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source ORDER BY :sortBy DESC")
-    suspend fun getAllDSort(sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source ORDER BY :sortBy LIMIT :limit")
-    suspend fun getLimitSort(limit: Int, sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source ORDER BY :sortBy DESC LIMIT :limit")
-    suspend fun getLimitDSort(limit: Int, sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source WHERE mimeType LIKE :mimeType || '%' ORDER BY :sortBy")
-    suspend fun getByMimeTypeSort(mimeType: String, sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source WHERE mimeType LIKE :mimeType || '%' ORDER BY :sortBy DESC")
-    suspend fun getByMimeTypeDSort(mimeType: String, sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source WHERE mimeType LIKE :mimeType || '%' ORDER BY :sortBy LIMIT :limit")
-    suspend fun getByMimeTypeLimitSort(mimeType: String, limit: Int, sortBy: String): List<Source>
-
-    @Query("SELECT * FROM Source WHERE mimeType LIKE :mimeType || '%' ORDER BY :sortBy DESC LIMIT :limit")
-    suspend fun getByMimeTypeLimitDSort(mimeType: String, limit: Int, sortBy: String): List<Source>
+    @RawQuery(observedEntities = [Source::class])
+    suspend fun query(sortBy: SupportSQLiteQuery): List<Source>
 
     //</editor-fold>查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查
 

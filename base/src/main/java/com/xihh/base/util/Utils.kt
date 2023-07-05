@@ -14,9 +14,9 @@ import android.provider.Settings
 import android.util.Size
 import android.util.SizeF
 import android.webkit.MimeTypeMap
+import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONObject
-import java.util.*
-import java.util.regex.Pattern
+import java.util.Calendar
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
 
@@ -78,6 +78,16 @@ fun Long.toFormatString(): String {
     sb.insert(0, temp)
 
     return sb.toString()
+}
+
+fun getCurYearStartCalendar(): Calendar {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    calendar.set(Calendar.DAY_OF_YEAR, 1)
+    return calendar
 }
 
 fun getCurDayStartCalendar(): Calendar {
@@ -165,20 +175,13 @@ fun getContentUri(mimeType: String?): Uri = when {
 fun getUri(mimeType: String?, mediaStoreId: Long): Uri =
     ContentUris.withAppendedId(getContentUri(mimeType), mediaStoreId)
 
-fun String?.extractInt(defaultValue: Int = 0): Int {
-    if (this == null) return defaultValue
-    val matcher = Pattern.compile("-?\\d+").matcher(this)
-    while (matcher.find()) {
-        return matcher.group(0)?.toIntOrNull() ?: defaultValue
+fun RecyclerView.scrollToFullVisible(position: Int) {
+    val view = findViewHolderForAdapterPosition(position)?.itemView
+    // Scroll to position if the view for the current position is null (not currently part of
+    // layout manager children), or it's not completely visible.
+    if (view == null || layoutManager?.isViewPartiallyVisible(view, false, true) == true) {
+        post {
+            scrollToPosition(position)
+        }
     }
-    return defaultValue
-}
-
-fun String?.extractFloat(defaultValue: Float): Float {
-    if (this == null) return defaultValue
-    val matcher = Pattern.compile("-?\\d+.\\d+").matcher(this)
-    while (matcher.find()) {
-        return matcher.group(0)?.toFloatOrNull() ?: defaultValue
-    }
-    return defaultValue
 }

@@ -1,25 +1,30 @@
 package com.xallery.common.repository.delegate
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.xallery.common.repository.constant.Constant
 import com.xallery.common.repository.db.db
 import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.MediaStoreFetcher
+import com.xihh.base.util.logx
 
 interface ISourceRepository {
 
-    suspend fun getSourceList(queryParams: MediaStoreFetcher.QueryParams? = null): List<Source>
+    suspend fun getSourceList(
+        filterType: Int, sortColumn: String?, isSortDesc: Boolean, resultNum: Int,
+    ): List<Source>
 
 }
 
 class SourceRepositoryImpl : ISourceRepository {
 
-    override suspend fun getSourceList(queryParams: MediaStoreFetcher.QueryParams?): List<Source> {
-        val queryParams = queryParams ?: MediaStoreFetcher.QueryParams()
-
+    override suspend fun getSourceList(
+        filterType: Int, sortColumn: String?, isSortDesc: Boolean, resultNum: Int,
+    ): List<Source> {
+        logx { "getSourceList: filterType=$filterType sortColumn=$sortColumn isSortDesc=$isSortDesc resultNum=$resultNum" }
         val selectionMimeType =
-            if (queryParams.filterType and MediaStoreFetcher.FilterType.FILTER_IMAGES != 0) {
+            if (filterType and MediaStoreFetcher.FilterType.FILTER_IMAGES != 0) {
                 when {
-                    queryParams.filterType and MediaStoreFetcher.FilterType.FILTER_GIFS != 0 -> {
+                    filterType and MediaStoreFetcher.FilterType.FILTER_GIFS != 0 -> {
                         Constant.MimeType.GIF
                     }
 
@@ -27,44 +32,26 @@ class SourceRepositoryImpl : ISourceRepository {
                         Constant.MimeType.IMAGE_START
                     }
                 }
-            } else if (queryParams.filterType and MediaStoreFetcher.FilterType.FILTER_VIDEOS != 0) {
+            } else if (filterType and MediaStoreFetcher.FilterType.FILTER_VIDEOS != 0) {
                 Constant.MimeType.VIDEO_START
             } else {
                 null
             }
 
-        return if (selectionMimeType == null) {
-            if (queryParams.resultNum > 0) {
-                if (queryParams.desc) {
-                    db.sourceDao.getLimitDSort(queryParams.resultNum, queryParams.sortColumn)
-                } else {
-                    db.sourceDao.getLimitSort(queryParams.resultNum, queryParams.sortColumn)
-                }
-            } else {
-                if (queryParams.desc) {
-                    db.sourceDao.getAllDSort(queryParams.sortColumn)
-                } else {
-                    db.sourceDao.getAllSort(queryParams.sortColumn)
-                }
-            }
-        } else {
-            if (queryParams.resultNum > 0) {
-                if (queryParams.desc) {
-                    db.sourceDao.getByMimeTypeLimitDSort(
-                        selectionMimeType, queryParams.resultNum, queryParams.sortColumn
-                    )
-                } else {
-                    db.sourceDao.getByMimeTypeLimitSort(
-                        selectionMimeType, queryParams.resultNum, queryParams.sortColumn
-                    )
-                }
-            } else {
-                if (queryParams.desc) {
-                    db.sourceDao.getByMimeTypeDSort(selectionMimeType, queryParams.sortColumn)
-                } else {
-                    db.sourceDao.getByMimeTypeSort(selectionMimeType, queryParams.sortColumn)
-                }
+        val sql = StringBuilder("SELECT * FROM Source")
+        if (selectionMimeType != null) {
+            sql.append(" WHERE mimeType LIKE '$selectionMimeType%'")
+        }
+        if (sortColumn != null) {
+            sql.append(" ORDER BY $sortColumn")
+            if (isSortDesc) {
+                sql.append(" DESC")
             }
         }
+        if (resultNum > 0) {
+            sql.append(" LIMIT $resultNum")
+        }
+
+        return db.sourceDao.query(SimpleSQLiteQuery(sql.toString()))
     }
 }

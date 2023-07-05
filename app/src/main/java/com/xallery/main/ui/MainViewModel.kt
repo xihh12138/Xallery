@@ -13,9 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel(),
-    ILoading by LoadingDelegate(),
-    IToast by ToastDelegate() {
+class MainViewModel : ViewModel(), ILoading by LoadingDelegate(), IToast by ToastDelegate() {
 
     private val mediaStoreFetcher = MediaStoreFetcher()
 
