@@ -1,4 +1,4 @@
-package com.xallery.common.reposity.constant
+package com.xallery.common.repository.constant
 
 object Constant {
     object File {

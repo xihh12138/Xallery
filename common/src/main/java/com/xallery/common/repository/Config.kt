@@ -1,7 +1,7 @@
-package com.xallery.common.reposity
+package com.xallery.common.repository
 
 import com.xallery.common.R
-import com.xallery.common.reposity.constant.Constant
+import com.xallery.common.repository.constant.Constant
 import com.xihh.base.android.appContext
 import com.xihh.base.android.createStore
 

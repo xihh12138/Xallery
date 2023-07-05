@@ -1,24 +1,18 @@
 package com.xallery.common.util
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.annotation.IntDef
 import androidx.exifinterface.media.ExifInterface
-import com.xallery.common.reposity.constant.Constant
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.constant.Constant
+import com.xallery.common.repository.db.model.Source
 import com.xihh.base.android.appContext
-import com.xihh.base.util.getIntValueNullable
-import com.xihh.base.util.getLongValue
-import com.xihh.base.util.getLongValueNullable
-import com.xihh.base.util.getStringValue
-import com.xihh.base.util.isVersionGreater
-import com.xihh.base.util.logf
+import com.xihh.base.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.LinkedList
+import java.util.*
 
 
 class MediaStoreFetcher {
@@ -85,13 +79,6 @@ class MediaStoreFetcher {
                     val id = cursor.getLongValue(MediaStore.Images.Media._ID)
                     val mimeType = cursor.getStringValue(MediaStore.Images.Media.MIME_TYPE)
 
-                    val contentUri = if (mimeType.startsWith(Constant.MimeType.VIDEO_START)) {
-                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    } else {
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    }
-                    val uri = ContentUris.withAppendedId(contentUri, id)
-
                     val path = cursor.getStringValue(MediaStore.Images.Media.DATA)
                     val size = cursor.getLongValue(MediaStore.Images.Media.SIZE)
                     val takenTimestamp = cursor.getLongValue(MediaStore.Images.Media.DATE_TAKEN)
@@ -105,26 +92,11 @@ class MediaStoreFetcher {
                     val width = cursor.getIntValueNullable(MediaStore.MediaColumns.WIDTH)
                     val height = cursor.getIntValueNullable(MediaStore.MediaColumns.HEIGHT)
                     val duration = cursor.getLongValueNullable(MediaStore.MediaColumns.DURATION)
-                    val fd = try {
-                        appContext.contentResolver.openFileDescriptor(uri, "r")
-                    } catch (e: Exception) {
-                        logf { "fetchSource: openFileDescriptor失败 name=$name,mimeType=$mimeType,contentUri=$contentUri,uri=$uri,path=$path,size=$size" }
-                        null
-                    }
-                    val exif = if (fd != null) {
-                        ExifInterface(fd.fileDescriptor)
-                    } else {
-                        null
-                    }
-                    val latlng = exif?.getLatLong()
-
-                    fd?.close()
 
                     val source = Source(
                         id,
-                        uri,
-                        path,
                         mimeType,
+                        path,
                         size,
                         takenTimestamp,
                         addedTimestamp,
@@ -133,12 +105,25 @@ class MediaStoreFetcher {
                         album,
                         width,
                         height,
-                        latlng?.get(0),
-                        latlng?.get(1),
+                        null,
+                        null,
                         duration,
                     )
-//                    logx { "fetchSource($i/$count): $source" }
+                    try {
+                        appContext.contentResolver.openFileDescriptor(source.uri, "r")
+                    } catch (e: Exception) {
+                        logf { "fetchSource: openFileDescriptor失败 name=$name,mimeType=$mimeType,uri=${source.uri},path=$path,size=$size" }
+                        null
+                    }?.use {
+                        val latlng = ExifInterface(it.fileDescriptor).latLong
+
+                        source.lat = latlng?.get(0)
+                        source.lng = latlng?.get(1)
+                    }
+
                     sourceList.add(source)
+
+//                    logx { "fetchSource($i/$count): $source" }
                     i++
                 } while (cursor.moveToNext())
             }
@@ -167,12 +152,16 @@ class MediaStoreFetcher {
         val selection = StringBuilder()
         val args = LinkedList<String>()
         if (filterType and FilterType.FILTER_IMAGES != 0) {
-            selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
-            args.add("${Constant.MimeType.IMAGE_START}%")
-        } else {
-            if (filterType and FilterType.FILTER_GIFS != 0) {
-                selection.append("${MediaStore.Images.Media.MIME_TYPE} = ? OR ")
-                args.add(Constant.MimeType.GIF)
+            when {
+                filterType and FilterType.FILTER_GIFS != 0 -> {
+                    selection.append("${MediaStore.Images.Media.MIME_TYPE} = ? OR ")
+                    args.add(Constant.MimeType.GIF)
+                }
+
+                else -> {
+                    selection.append("${MediaStore.Images.Media.MIME_TYPE} LIKE ? OR ")
+                    args.add("${Constant.MimeType.IMAGE_START}%")
+                }
             }
         }
 
@@ -188,7 +177,7 @@ class MediaStoreFetcher {
         @FilterType val filterType: Int = FilterType.FILTER_ALL,
         val resultNum: Int = -1,
         val sortColumn: String = MediaStore.Images.Media._ID,
-        val desc: Boolean = true
+        val desc: Boolean = true,
     )
 
     @IntDef(
@@ -202,10 +191,10 @@ class MediaStoreFetcher {
     @Retention(AnnotationRetention.SOURCE)
     annotation class FilterType {
         companion object {
+            const val FILTER_ALL = 0
             const val FILTER_IMAGES = 1
             const val FILTER_VIDEOS = 1 shl 1
-            const val FILTER_GIFS = 1 shl 2
-            const val FILTER_ALL = Int.MAX_VALUE
+            const val FILTER_GIFS = FILTER_IMAGES + (1 shl 2)
         }
     }
 }

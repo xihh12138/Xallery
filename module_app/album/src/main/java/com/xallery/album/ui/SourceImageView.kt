@@ -9,8 +9,8 @@ import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import com.xallery.album.repo.bean.SourceUIInfo
-import com.xallery.common.reposity.constant.Constant
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.constant.Constant
+import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xihh.base.android.appContext
 import com.xihh.base.util.drawableRes

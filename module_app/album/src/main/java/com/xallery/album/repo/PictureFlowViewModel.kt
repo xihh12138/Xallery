@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView.RecycledViewPool
 import com.xallery.album.R
 import com.xallery.album.ui.PictureFlowAdapter
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.db.model.Source
+import com.xallery.common.repository.delegate.ISourceRepository
+import com.xallery.common.repository.delegate.SourceRepositoryImpl
 import com.xallery.common.util.MediaStoreFetcher
 import com.xihh.base.android.appContext
 import com.xihh.base.delegate.ILoading
@@ -20,21 +22,21 @@ import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Locale
 
-class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
+class PictureFlowViewModel : ViewModel(),
+    ILoading by LoadingDelegate(),
+    ISourceRepository by SourceRepositoryImpl() {
 
     private var hasLoadSource = false
 
     private val _dataFlow = MutableStateFlow<Pair<Int, List<IItemBean>?>?>(null)
     val dataFlow = _dataFlow.asStateFlow()
 
-    private val mediaStoreFetcher = MediaStoreFetcher()
-
     val imageRecyclerViewPool = RecycledViewPool().apply {
         setMaxRecycledViews(PictureFlowAdapter.VIEW_TYPE_SOURCE, 15)
         setMaxRecycledViews(PictureFlowAdapter.VIEW_TYPE_GROUP, 6)
     }
 
-    fun fetchSource(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
+    fun getSourceList(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
         if (hasLoadSource && _dataFlow.value != null) {
             return@launch
         }
@@ -48,19 +50,20 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
         }
         if (isFirst) {
             // ------------ pre fetch ------------
-            fetchSource(requestCode, MediaStoreFetcher.QueryParams(filterType, resultNum = 50))
+            getSourceList(requestCode, filterType, 50)
         }
 
-        fetchSource(requestCode, MediaStoreFetcher.QueryParams(filterType))
+        getSourceList(requestCode, filterType)
 
         hasLoadSource = true
     }.invokeOnCompletion {
         hideLoading()
     }
 
-    private fun fetchSource(requestCode: Int, queryParams: MediaStoreFetcher.QueryParams) =
+    private fun getSourceList(requestCode: Int, filterType: Int, num: Int = -1) =
         viewModelScope.launch {
-            val sourceList = mediaStoreFetcher.fetchSource(queryParams)
+            val sourceList = getSourceList(MediaStoreFetcher.QueryParams(filterType, num))
+
             val itemBeanList = withContext(Dispatchers.IO) {
                 val itemBeanList = ArrayList<IItemBean>(sourceList.size)
 
@@ -69,6 +72,7 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
                 val todayTimeMillis = calendar.timeInMillis
                 val yesterdayTimeMillis = calendar.timeInMillis - 86400000
                 val beforeYesterdayTimeMillis = calendar.timeInMillis - 86400000 * 2
+
                 if (sourceList.size > 0) {
                     val first = sourceList[0]
                     val groupBean = if (first.addTimestamp >= todayTimeMillis) {
@@ -125,9 +129,7 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
             _dataFlow.emit(requestCode to itemBeanList)
         }
 
-    data class GroupBean(
-        val name: String
-    ) : IItemBean {
+    data class GroupBean(val name: String) : IItemBean {
 
         override fun isItemsTheSame(other: IItemBean): Boolean {
             if (javaClass != other.javaClass) return false
@@ -144,9 +146,7 @@ class PictureFlowViewModel : ViewModel(), ILoading by LoadingDelegate() {
         }
     }
 
-    data class SourceBean(
-        val source: Source
-    ) : IItemBean {
+    data class SourceBean(val source: Source) : IItemBean {
 
         override fun isItemsTheSame(other: IItemBean): Boolean {
             if (javaClass != other.javaClass) return false

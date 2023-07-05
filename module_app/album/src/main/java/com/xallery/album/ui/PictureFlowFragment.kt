@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import com.xallery.album.R
 import com.xallery.album.databinding.FragmentPictureFlowBinding
 import com.xallery.album.repo.PictureFlowViewModel
-import com.xallery.common.reposity.RouteViewModel
-import com.xallery.common.reposity.db.model.Source
-import com.xallery.common.reposity.getRouter
+import com.xallery.common.repository.RouteViewModel
+import com.xallery.common.repository.db.model.Source
+import com.xallery.common.repository.getRouter
 import com.xallery.picture.repo.PictureDetailsViewModel
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.delegate.RouteAction
@@ -46,7 +46,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         initRV()
 
         lifecycleScope.launch {
-            vm.fetchSource(page, true)
+            vm.getSourceList(page, true)
             vm.dataFlow.collectLatest {
                 if (it?.first == page) {
                     it.second?.let { it1 ->

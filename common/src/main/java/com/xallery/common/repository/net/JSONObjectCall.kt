@@ -1,4 +1,4 @@
-package com.xallery.common.reposity.net
+package com.xallery.common.repository.net
 
 import com.xihh.base.util.logf
 import okhttp3.ResponseBody

@@ -1,4 +1,4 @@
-package com.xallery.common.reposity.net.bean
+package com.xallery.common.repository.net.bean
 
 import androidx.annotation.Keep
 

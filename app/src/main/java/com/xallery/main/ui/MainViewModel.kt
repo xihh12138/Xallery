@@ -3,6 +3,8 @@ package com.xallery.main.ui
 import androidx.annotation.IntDef
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.xallery.common.repository.db.db
+import com.xallery.common.util.MediaStoreFetcher
 import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.IToast
 import com.xihh.base.delegate.LoadingDelegate
@@ -15,11 +17,20 @@ class MainViewModel : ViewModel(),
     ILoading by LoadingDelegate(),
     IToast by ToastDelegate() {
 
+    private val mediaStoreFetcher = MediaStoreFetcher()
+
     private val _mainPageFlow = MutableStateFlow(0)
     val mainPageFlow = _mainPageFlow.asStateFlow()
 
     fun goMainPage(page: Int) = viewModelScope.launch {
         _mainPageFlow.emit(page)
+    }
+
+    fun fetchAllSource() = viewModelScope.launch {
+        val sourceList =
+            mediaStoreFetcher.fetchSource(MediaStoreFetcher.QueryParams(MediaStoreFetcher.FilterType.FILTER_ALL))
+
+        db.sourceDao.addAll(sourceList)
     }
 
     companion object {

@@ -1,4 +1,4 @@
-package com.xallery.common.reposity.db.converter
+package com.xallery.common.repository.db.converter
 
 import androidx.room.TypeConverter
 

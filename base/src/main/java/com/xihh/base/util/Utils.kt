@@ -1,5 +1,6 @@
 package com.xihh.base.util
 
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
@@ -8,12 +9,13 @@ import android.graphics.RectF
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Size
 import android.util.SizeF
 import android.webkit.MimeTypeMap
 import org.json.JSONObject
-import java.util.Calendar
+import java.util.*
 import java.util.regex.Pattern
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
@@ -151,6 +153,17 @@ fun getMediaDuration(path: String?): Long? {
     }
     return mime
 }
+
+fun getContentUri(mimeType: String?): Uri = when {
+    mimeType == null -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    mimeType.startsWith("image") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    mimeType.startsWith("video") -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+    mimeType.startsWith("audio") -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+    else -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+}
+
+fun getUri(mimeType: String?, mediaStoreId: Long): Uri =
+    ContentUris.withAppendedId(getContentUri(mimeType), mediaStoreId)
 
 fun String?.extractInt(defaultValue: Int = 0): Int {
     if (this == null) return defaultValue

@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.VoxBox" parent="Theme.TransparentStatus">
+    <style name="Theme.Xallery" parent="Theme.TransparentStatus">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/secondary</item>

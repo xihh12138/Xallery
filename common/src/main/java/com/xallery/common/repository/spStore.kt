@@ -1,4 +1,4 @@
-package com.xallery.common.reposity
+package com.xallery.common.repository
 
 import com.xihh.base.android.appContext
 import com.xihh.base.android.createStore

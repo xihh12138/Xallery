@@ -3,8 +3,6 @@ package com.xallery.picture.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.View
@@ -14,7 +12,7 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.app.SharedElementCallback
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ActivitySourceDetailBinding
 import com.xallery.picture.repo.PictureDetailsViewModel
@@ -27,7 +25,7 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
     private val vm by lazy { ViewModelProvider(this)[PictureDetailsViewModel::class.java] }
 
     override fun onPrepareAnimation() {
-        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+//        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.sharedElementEnterTransition = TransitionInflater.from(this)
             .inflateTransition(com.xihh.base.R.transition.image_shared_element_transition)
 

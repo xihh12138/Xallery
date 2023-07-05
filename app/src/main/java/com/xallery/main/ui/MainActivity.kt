@@ -14,9 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.xallery.common.reposity.RouteViewModel
-import com.xallery.common.reposity.config
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.RouteViewModel
+import com.xallery.common.repository.config
+import com.xallery.common.repository.db.model.Source
 import com.xallery.common.ui.LoadingHost
 import com.xallery.common.ui.LoadingHostImpl
 import com.xallery.common.ui.LottieHost
@@ -111,16 +111,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 }
             }
         }
-        lifecycleScope.launchWhenStarted {
-            if (acquirePermission()) {
-                if (savedInstanceState == null) {
+        lifecycleScope.launch {
+            if (savedInstanceState == null) {
+                acquirePermission {
+                    vm.fetchAllSource()
                     routeVm.addActionNow(RouteAction(RouteViewModel.ROUTE_FLAG_MAIN))
                 }
             }
         }
     }
 
-    private suspend fun acquirePermission(): Boolean {
+    private suspend fun acquirePermission(onPermissionGranted: () -> Unit): Boolean {
         val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -183,6 +184,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
             }
         }
 
+        onPermissionGranted()
         return true
     }
 

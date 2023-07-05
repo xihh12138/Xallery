@@ -1,4 +1,4 @@
-package com.xallery.common.reposity
+package com.xallery.common.repository
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

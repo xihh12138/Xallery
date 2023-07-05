@@ -41,6 +41,5 @@ android {
 
 dependencies {
 
-    implementation project(':common')
     implementation project(':module_app:album')
 }

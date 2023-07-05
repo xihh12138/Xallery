@@ -2,7 +2,7 @@ package com.xallery.picture.repo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.db.model.Source
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

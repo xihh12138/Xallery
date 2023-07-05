@@ -1,6 +1,6 @@
-package com.xallery.common.reposity.net
+package com.xallery.common.repository.net
 
-import com.xallery.common.reposity.net.bean.Response
+import com.xallery.common.repository.net.bean.Response
 import com.xihh.base.util.logf
 import retrofit2.Call
 import retrofit2.CallAdapter

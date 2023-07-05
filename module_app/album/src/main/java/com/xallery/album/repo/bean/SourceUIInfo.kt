@@ -1,6 +1,6 @@
 package com.xallery.album.repo.bean
 
-import com.xallery.common.reposity.db.model.Source
+import com.xallery.common.repository.db.model.Source
 
 data class SourceUIInfo(
     val mimeType: String?,
