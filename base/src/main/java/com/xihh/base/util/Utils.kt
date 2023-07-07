@@ -16,7 +16,7 @@ import android.util.SizeF
 import android.webkit.MimeTypeMap
 import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONObject
-import java.util.Calendar
+import java.util.*
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
 
@@ -175,13 +175,17 @@ fun getContentUri(mimeType: String?): Uri = when {
 fun getUri(mimeType: String?, mediaStoreId: Long): Uri =
     ContentUris.withAppendedId(getContentUri(mimeType), mediaStoreId)
 
-fun RecyclerView.scrollToFullVisible(position: Int) {
+fun RecyclerView.scrollToFullVisible(position: Int, isSmooth: Boolean = false) {
     val view = findViewHolderForAdapterPosition(position)?.itemView
     // Scroll to position if the view for the current position is null (not currently part of
     // layout manager children), or it's not completely visible.
     if (view == null || layoutManager?.isViewPartiallyVisible(view, false, true) == true) {
         post {
-            scrollToPosition(position)
+            if (isSmooth) {
+                smoothScrollToPosition(position)
+            } else {
+                scrollToPosition(position)
+            }
         }
     }
 }

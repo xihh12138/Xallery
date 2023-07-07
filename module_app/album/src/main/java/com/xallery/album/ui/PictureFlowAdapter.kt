@@ -14,22 +14,18 @@ import com.xihh.base.ui.AntiDitherClicker
 class PictureFlowAdapter(
     private val onTitleClick: (PictureFlowViewModel.GroupBean) -> Unit,
     private val onSourceClick: (View, Int, PictureFlowViewModel.SourceBean) -> Unit,
-) :
-    RecyclerView.Adapter<PictureFlowAdapter.IViewHolder>() {
+) : RecyclerView.Adapter<PictureFlowAdapter.IViewHolder>() {
 
     private val differ = AsyncListDiffer(this,
         object : DiffUtil.ItemCallback<PictureFlowViewModel.IItemBean>() {
             override fun areItemsTheSame(
-                oldItem: PictureFlowViewModel.IItemBean, newItem: PictureFlowViewModel.IItemBean
-            ): Boolean {
-                return oldItem.isItemsTheSame(newItem)
-            }
+                oldItem: PictureFlowViewModel.IItemBean, newItem: PictureFlowViewModel.IItemBean,
+            ): Boolean = oldItem.isItemsTheSame(newItem)
 
             override fun areContentsTheSame(
-                oldItem: PictureFlowViewModel.IItemBean, newItem: PictureFlowViewModel.IItemBean
-            ): Boolean {
-                return oldItem.isContentTheSame(newItem)
-            }
+                oldItem: PictureFlowViewModel.IItemBean, newItem: PictureFlowViewModel.IItemBean,
+            ): Boolean = oldItem.isContentTheSame(newItem)
+
         })
 
     fun updateData(data: List<PictureFlowViewModel.IItemBean>) {

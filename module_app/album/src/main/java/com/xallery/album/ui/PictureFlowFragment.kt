@@ -3,10 +3,8 @@ package com.xallery.album.ui
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.transition.TransitionSet
-import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnLayoutChangeListener
-import android.view.ViewGroup
 import androidx.core.app.SharedElementCallback
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +21,6 @@ import com.xallery.common.repository.getRouter
 import com.xallery.picture.repo.PictureDetailsViewModel
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.delegate.NavAction
-import com.xihh.base.util.logx
 import com.xihh.base.util.scrollToFullVisible
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -67,7 +64,9 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
                     }
                     when (it.flag) {
                         PictureFlowViewModel.USER_ACTION_JUMP_POS -> {
-                            vb.rv.scrollToFullVisible(extra[PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS] as Int)
+                            vb.rv.scrollToFullVisible(
+                                extra[PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS] as Int, true
+                            )
                         }
 
                         PictureFlowViewModel.USER_ACTION_REFRESH -> {
@@ -170,35 +169,6 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
                 vb.rv.scrollToFullVisible(pos)
             }
         })
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        logx { "onDestroy: PictureFlowFragment" }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        logx { "onDestroyView: PictureFlowFragment" }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        logx { "onDetach: PictureFlowFragment" }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        logx { "onCreateView: PictureFlowFragment" }
-        return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        logx { "onViewCreated: PictureFlowFragment" }
     }
 
     companion object {

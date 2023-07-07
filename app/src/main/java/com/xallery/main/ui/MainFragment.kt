@@ -3,9 +3,6 @@ package com.xallery.main.ui
 import android.graphics.Rect
 import android.os.Bundle
 import android.transition.TransitionInflater
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import androidx.annotation.DrawableRes
 import androidx.core.view.marginBottom
@@ -22,7 +19,6 @@ import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.delegate.NavAction
 import com.xihh.base.ui.FadedPageTransformer
-import com.xihh.base.util.logx
 import com.xihh.xallery.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -60,42 +56,40 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
     override fun getViewModel() = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
-        if (savedInstanceState == null) {
-            // ------------ inflateAppBarMenu ------------
-            menuInflater.inflate(vb.appBar)
-            // ------------ inflate ViewPager ------------
-            vb.viewpager.adapter = pagerAdapter
-            vb.viewpager.setPageTransformer(FadedPageTransformer())
-            TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
-                tab.setIcon(pageList[pos].iconStringRes)
-            }.attach()
-            vb.indicator.addOnTabSelectedListener(object : OnTabSelectedListener {
-                override fun onTabSelected(tab: TabLayout.Tab) {
-                }
+        // ------------ inflateAppBarMenu ------------
+        menuInflater.inflate(vb.appBar)
+        // ------------ inflate ViewPager ------------
+        vb.viewpager.adapter = pagerAdapter
+        vb.viewpager.setPageTransformer(FadedPageTransformer())
+        TabLayoutMediator(vb.indicator, vb.viewpager) { tab, pos ->
+            tab.setIcon(pageList[pos].iconStringRes)
+        }.attach()
+        vb.indicator.addOnTabSelectedListener(object : OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+            }
 
-                override fun onTabUnselected(tab: TabLayout.Tab) {
-                }
+            override fun onTabUnselected(tab: TabLayout.Tab) {
+            }
 
-                override fun onTabReselected(tab: TabLayout.Tab) {
-                    pictureFlowVM.postAction(
-                        NavAction(
-                            PictureFlowViewModel.USER_ACTION_JUMP_POS,
-                            PictureFlowViewModel.USER_ACTION_KEY_REQUEST_CODE to tab.position,
-                            PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS to 0
-                        )
+            override fun onTabReselected(tab: TabLayout.Tab) {
+                pictureFlowVM.postAction(
+                    NavAction(
+                        PictureFlowViewModel.USER_ACTION_JUMP_POS,
+                        PictureFlowViewModel.USER_ACTION_KEY_REQUEST_CODE to tab.position,
+                        PictureFlowViewModel.USER_ACTION_KEY_JUMP_POS to 0
                     )
-                }
-            })
+                )
+            }
+        })
 
-            lifecycleScope.apply {
-                launch {
-                    vm.mainPageFlow.collectLatest {
-                        when (it) {
-                            MainViewModel.MAIN_PAGE_ALL -> goPage(0)
-                            MainViewModel.MAIN_PAGE_GIF -> goPage(1)
-                            MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
-                            MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
-                        }
+        lifecycleScope.apply {
+            launch {
+                vm.mainPageFlow.collectLatest {
+                    when (it) {
+                        MainViewModel.MAIN_PAGE_ALL -> goPage(0)
+                        MainViewModel.MAIN_PAGE_GIF -> goPage(1)
+                        MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
+                        MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
                     }
                 }
             }
@@ -130,31 +124,7 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
     override fun onDestroy() {
         super.onDestroy()
-        logx { "onDestroy: MainFragment" }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        logx { "onDestroyView: MainFragment" }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        logx { "onDetach: MainFragment" }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        logx { "onCreateView: MainFragment" }
-        return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        logx { "onViewCreated: MainFragment" }
+        pictureFlowVM.imageRecyclerViewPool.clear()
     }
 
     private data class PageBean(

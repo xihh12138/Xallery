@@ -20,7 +20,7 @@ fun ImageView.loadUri(
     signature: Key? = null,
     centerCrop: Boolean = true,
     getThumbnail: Boolean = true,
-    onLoadFinish: ((loadSuccess: Boolean) -> Unit)? = null
+    onLoadFinish: ((loadSuccess: Boolean) -> Unit)? = null,
 ) {
     val options = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
@@ -40,14 +40,14 @@ fun ImageView.loadUri(
         options.centerCrop()
     }
 
-    Glide.with(context)
+    Glide.with(this)
         .load(uri)
-        .listener(object :RequestListener<Drawable>{
+        .listener(object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?,
                 model: Any?,
                 target: Target<Drawable>?,
-                isFirstResource: Boolean
+                isFirstResource: Boolean,
             ): Boolean {
                 onLoadFinish?.invoke(false)
                 return false
@@ -58,7 +58,7 @@ fun ImageView.loadUri(
                 model: Any?,
                 target: Target<Drawable>?,
                 dataSource: DataSource?,
-                isFirstResource: Boolean
+                isFirstResource: Boolean,
             ): Boolean {
                 onLoadFinish?.invoke(true)
                 return false
@@ -71,7 +71,7 @@ fun ImageView.loadUri(
 fun ImageView.loadPath(
     path: String,
     signature: Key? = null,
-    centerCrop: Boolean = true
+    centerCrop: Boolean = true,
 ) {
     val options = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)

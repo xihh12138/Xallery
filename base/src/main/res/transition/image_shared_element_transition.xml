@@ -23,5 +23,4 @@
   <changeBounds/>
   <changeClipBounds/>
   <changeTransform/>
-  <changeImageTransform/>
 </transitionSet>

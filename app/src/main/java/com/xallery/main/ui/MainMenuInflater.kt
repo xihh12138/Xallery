@@ -7,6 +7,7 @@ import com.xihh.xallery.R
 class MainMenuInflater(onClick: (itemId: Int) -> Unit) {
 
     fun inflate(toolbar: Toolbar) {
+        toolbar.menu.clear()
         toolbar.menu.add(GROUP_ID_SEARCH, ITEM_ID_SEARCH, ORDER_SEARCH, R.string.menu_search)
             .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS)
             .setIcon(com.xallery.common.R.drawable.ic_search)

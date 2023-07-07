@@ -23,6 +23,7 @@ import com.xallery.common.ui.LottieHost
 import com.xallery.common.ui.LottieHostImpl
 import com.xallery.common.ui.view.CommonDialogFragment
 import com.xallery.common.util.toast
+import com.xallery.picture.ui.PictureDetailsFragment
 import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
@@ -70,13 +71,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 when (it.flag) {
                     RouteViewModel.ROUTE_FLAG_MAIN -> {
                         routeVm.arrangeAction {
+                            val pictureDetailsFragment = PictureDetailsFragment()
                             supportFragmentManager.beginTransaction().disallowAddToBackStack()
-                                .setReorderingAllowed(true).add(
+                                .add(
                                     vb.container.id,
                                     MainFragment::class.java,
                                     null,
                                     MainFragment::class.simpleName
-                                ).commit()
+                                )
+                                .add(
+                                    vb.container.id,
+                                    pictureDetailsFragment,
+                                    PictureDetailsFragment::class.simpleName
+                                )
+                                .hide(pictureDetailsFragment)
+                                .commit()
                         }
                     }
 
@@ -84,25 +93,24 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                         routeVm.arrangeAction {
                             val source = it.extras?.get("source") as Source
                             val view = (it.extras?.get("view") as WeakReference<*>).get() as View
-                            sourceDetailLauncher.launch(source to view)
-//                            val t = supportFragmentManager.beginTransaction()
-//                                .setReorderingAllowed(true)
-//                                .addSharedElement(view, view.transitionName)
-////                                .replace(
-////                                    vb.container.id,
-////                                    PictureDetailsFragment::class.java,
-////                                    null,
-////                                    PictureDetailsFragment::class.simpleName
-////                                )
-//                                .add(
+//                            sourceDetailLauncher.launch(source to view)
+                            supportFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .addSharedElement(view, view.transitionName)
+//                                .replace(
 //                                    vb.container.id,
-//                                    PictureDetailsFragment(),
+//                                    PictureDetailsFragment::class.java,
+//                                    null,
 //                                    PictureDetailsFragment::class.simpleName
 //                                )
-//                                .hide(supportFragmentManager.fragments.find { it is MainFragment }!!)
-//
-//                            t.addToBackStack(PictureDetailsFragment::class.simpleName)
-//                                .commit()
+                                .show(
+                                    supportFragmentManager.findFragmentByTag(
+                                        PictureDetailsFragment::class.simpleName
+                                    )!!
+                                )
+                                .hide(supportFragmentManager.findFragmentByTag(MainFragment::class.simpleName)!!)
+                                .addToBackStack(PictureDetailsFragment::class.simpleName)
+                                .commit()
                         }
                     }
                 }
