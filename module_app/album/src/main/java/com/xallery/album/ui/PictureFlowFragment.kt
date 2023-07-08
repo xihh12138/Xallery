@@ -119,7 +119,11 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         getRouter(requireActivity()).addActionNow(
             NavAction(
                 RouteViewModel.ROUTE_FLAG_PICTURE,
-                mapOf("view" to WeakReference(view), "source" to source)
+                mapOf(
+                    "view" to WeakReference(view),
+                    "position" to position,
+                    "filterType" to PictureFlowViewModel.filterTypeMap[page]
+                )
             )
         )
     }

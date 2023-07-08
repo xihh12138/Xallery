@@ -10,7 +10,7 @@ import com.xihh.base.util.logx
 interface ISourceRepository {
 
     suspend fun getSourceList(
-        filterType: Int, sortColumn: String?, isSortDesc: Boolean, resultNum: Int,
+        filterType: Int, sortColumn: String?, isSortDesc: Boolean, resultNum: Int = -1,
     ): List<Source>
 
 }

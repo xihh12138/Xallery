@@ -49,12 +49,8 @@ class PictureFlowViewModel : ViewModel(),
     fun refreshSourceList(requestCode: Int, isFirst: Boolean) = viewModelScope.launch {
         showLoading()
 
-        val filterType = when (requestCode) {
-            0 -> MediaStoreFetcher.FilterType.FILTER_ALL
-            1 -> MediaStoreFetcher.FilterType.FILTER_VIDEOS
-            2 -> MediaStoreFetcher.FilterType.FILTER_GIFS
-            else -> MediaStoreFetcher.FilterType.FILTER_ALL
-        }
+        val filterType = filterTypeMap[requestCode]
+
         if (isFirst) {
             // ------------ pre fetch ------------
             _dataFlow.emit(requestCode to refreshSourceList(filterType, 50))
@@ -71,7 +67,11 @@ class PictureFlowViewModel : ViewModel(),
         val isSortDesc = config.isSortDesc
         val sourceList = getSourceList(filterType, sortColumn, isSortDesc, num)
 
-        return withContext(Dispatchers.IO) {
+        return transformToItemBeanList(sourceList)
+    }
+
+    private suspend fun transformToItemBeanList(sourceList: List<Source>): ArrayList<IItemBean> =
+        withContext(Dispatchers.IO) {
             val itemBeanList = ArrayList<IItemBean>(sourceList.size)
 
             val locale = Locale.getDefault()
@@ -100,7 +100,7 @@ class PictureFlowViewModel : ViewModel(),
                     GroupBean.getYMD(calendar, locale)
                 }
                 itemBeanList.add(groupBean)
-                itemBeanList.add(SourceBean(first))
+                itemBeanList.add(SourceBean(first, 0))
             }
             for (i in 1 until sourceList.size) {
                 val source = sourceList[i]
@@ -124,11 +124,10 @@ class PictureFlowViewModel : ViewModel(),
                     }
                     itemBeanList.add(groupBean)
                 }
-                itemBeanList.add(SourceBean(source))
+                itemBeanList.add(SourceBean(source, i))
             }
             itemBeanList
         }
-    }
 
     data class GroupBean(val name: String) : IItemBean {
 
@@ -174,14 +173,15 @@ class PictureFlowViewModel : ViewModel(),
 
     }
 
-    data class SourceBean(val source: Source) : IItemBean {
+    data class SourceBean(val source: Source, val originPosition: Int) : IItemBean {
 
         override fun isItemsTheSame(other: IItemBean): Boolean {
             if (javaClass != other.javaClass) return false
 
             other as SourceBean
 
-            if (source.id == other.source.id) return false
+            if (source.id != other.source.id) return false
+            if (originPosition != other.originPosition) return false
 
             return true
         }
@@ -192,6 +192,7 @@ class PictureFlowViewModel : ViewModel(),
             other as SourceBean
 
             if (source != other.source) return false
+            if (originPosition != other.originPosition) return false
 
             return true
         }
@@ -209,5 +210,12 @@ class PictureFlowViewModel : ViewModel(),
 
         const val USER_ACTION_KEY_REQUEST_CODE = "code"
         const val USER_ACTION_KEY_JUMP_POS = "position"
+
+        val filterTypeMap = arrayOf(
+            MediaStoreFetcher.FilterType.FILTER_ALL,
+            MediaStoreFetcher.FilterType.FILTER_VIDEOS,
+            MediaStoreFetcher.FilterType.FILTER_GIFS,
+            MediaStoreFetcher.FilterType.FILTER_ALL
+        )
     }
 }

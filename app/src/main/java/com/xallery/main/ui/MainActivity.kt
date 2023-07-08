@@ -23,7 +23,6 @@ import com.xallery.common.ui.LottieHost
 import com.xallery.common.ui.LottieHostImpl
 import com.xallery.common.ui.view.CommonDialogFragment
 import com.xallery.common.util.toast
-import com.xallery.picture.ui.PictureDetailsFragment
 import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
@@ -71,7 +70,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                 when (it.flag) {
                     RouteViewModel.ROUTE_FLAG_MAIN -> {
                         routeVm.arrangeAction {
-                            val pictureDetailsFragment = PictureDetailsFragment()
+//                            val pictureDetailsFragment = PictureDetailsFragment()
                             supportFragmentManager.beginTransaction().disallowAddToBackStack()
                                 .add(
                                     vb.container.id,
@@ -79,38 +78,39 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                                     null,
                                     MainFragment::class.simpleName
                                 )
-                                .add(
-                                    vb.container.id,
-                                    pictureDetailsFragment,
-                                    PictureDetailsFragment::class.simpleName
-                                )
-                                .hide(pictureDetailsFragment)
+//                                .add(
+//                                    vb.container.id,
+//                                    pictureDetailsFragment,
+//                                    PictureDetailsFragment::class.simpleName
+//                                )
+//                                .hide(pictureDetailsFragment)
                                 .commit()
                         }
                     }
 
                     RouteViewModel.ROUTE_FLAG_PICTURE -> {
                         routeVm.arrangeAction {
-                            val source = it.extras?.get("source") as Source
+                            val filterType = it.extras?.get("filterType") as Int
+                            val position = it.extras?.get("position") as Int
                             val view = (it.extras?.get("view") as WeakReference<*>).get() as View
-//                            sourceDetailLauncher.launch(source to view)
-                            supportFragmentManager.beginTransaction()
-                                .setReorderingAllowed(true)
-                                .addSharedElement(view, view.transitionName)
-//                                .replace(
-//                                    vb.container.id,
-//                                    PictureDetailsFragment::class.java,
-//                                    null,
-//                                    PictureDetailsFragment::class.simpleName
+                            sourceDetailLauncher.launch((filterType to position) to view)
+//                            supportFragmentManager.beginTransaction()
+//                                .setReorderingAllowed(true)
+//                                .addSharedElement(view, view.transitionName)
+////                                .replace(
+////                                    vb.container.id,
+////                                    PictureDetailsFragment::class.java,
+////                                    null,
+////                                    PictureDetailsFragment::class.simpleName
+////                                )
+//                                .show(
+//                                    supportFragmentManager.findFragmentByTag(
+//                                        PictureDetailsFragment::class.simpleName
+//                                    )!!
 //                                )
-                                .show(
-                                    supportFragmentManager.findFragmentByTag(
-                                        PictureDetailsFragment::class.simpleName
-                                    )!!
-                                )
-                                .hide(supportFragmentManager.findFragmentByTag(MainFragment::class.simpleName)!!)
-                                .addToBackStack(PictureDetailsFragment::class.simpleName)
-                                .commit()
+//                                .hide(supportFragmentManager.findFragmentByTag(MainFragment::class.simpleName)!!)
+//                                .addToBackStack(PictureDetailsFragment::class.simpleName)
+//                                .commit()
                         }
                     }
                 }

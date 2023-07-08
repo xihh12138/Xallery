@@ -10,6 +10,7 @@ import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.FragmentPictureDetailsBinding
 import com.xallery.picture.repo.PictureDetailsViewModel
 import com.xihh.base.android.BaseFragment
+import com.xihh.base.util.ImmerseUtil
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -20,7 +21,6 @@ class PictureDetailsFragment :
         ViewModelProvider(requireActivity())[PictureDetailsViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
-//        ImmerseUtil.setStatusBarVisible(requireActivity().window, false)
         vb.image.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
@@ -55,8 +55,10 @@ class PictureDetailsFragment :
                     startPostponedEnterTransition()
                 }
             }
+            ImmerseUtil.setStatusBarVisible(requireActivity().window, false)
         } else {
             vb.image.setImageDrawable(null)
+            ImmerseUtil.setStatusBarVisible(requireActivity().window, true)
         }
     }
 }

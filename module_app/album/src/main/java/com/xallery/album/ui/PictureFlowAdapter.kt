@@ -67,7 +67,7 @@ class PictureFlowAdapter(
 
             holder.iv.loadSource(bean.source)
             holder.iv.setOnClickListener(AntiDitherClicker {
-                onSourceClick(holder.iv, position, bean)
+                onSourceClick(holder.iv, bean.originPosition, bean)
             })
         }
     }
