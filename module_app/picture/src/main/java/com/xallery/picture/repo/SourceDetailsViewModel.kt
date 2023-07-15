@@ -1,5 +1,6 @@
 package com.xallery.picture.repo
 
+import androidx.annotation.Keep
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,10 +11,9 @@ import com.xallery.common.repository.delegate.ISourceRepository
 import com.xallery.common.repository.delegate.SourceRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class PictureDetailsViewModel() : ViewModel(), ISourceRepository by SourceRepositoryImpl() {
+class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceRepositoryImpl() {
 
     private var filterType = 0
 
@@ -37,13 +37,16 @@ class PictureDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposi
         }
     }
 
+    @Keep
     constructor(filterType: Int, position: Int) : this() {
         this.filterType = filterType
         this.position = position
     }
 
-    fun updateCurSource(source: Source, position: Int) = viewModelScope.launch {
-        _curSourceFlow.emit(source to position)
+    fun updateCurPosition(position: Int) = viewModelScope.launch {
+        sourceListFlow.value?.getOrNull(position)?.let {
+            _curSourceFlow.emit(it to position)
+        }
     }
 
     class Factory(private val filterType: Int, private val position: Int) :

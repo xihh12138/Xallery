@@ -13,10 +13,11 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Size
 import android.util.SizeF
+import android.view.View
 import android.webkit.MimeTypeMap
 import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONObject
-import java.util.*
+import java.util.Calendar
 
 fun isVersionGreater(sdkInt: Int) = Build.VERSION.SDK_INT >= sdkInt
 
@@ -175,17 +176,45 @@ fun getContentUri(mimeType: String?): Uri = when {
 fun getUri(mimeType: String?, mediaStoreId: Long): Uri =
     ContentUris.withAppendedId(getContentUri(mimeType), mediaStoreId)
 
+fun RecyclerView.scrollToPositionIfNeed(position: Int) {
+    if (isComputingLayout || isInLayout || layoutManager?.isAttachedToWindow == false) {
+        addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(
+                v: View,
+                left: Int,
+                top: Int,
+                right: Int,
+                bottom: Int,
+                oldLeft: Int,
+                oldTop: Int,
+                oldRight: Int,
+                oldBottom: Int,
+            ) {
+                removeOnLayoutChangeListener(this)
+
+                scrollToFullVisible(position)
+            }
+        })
+    } else {
+        scrollToFullVisible(position)
+    }
+}
+
 fun RecyclerView.scrollToFullVisible(position: Int, isSmooth: Boolean = false) {
+    // Scroll to position if the view for the current position is null (not currently part of
+    // layout manager children), or it's not completely visible.
+    if (!isPositionFullVisible(position)) {
+        if (isSmooth) {
+            smoothScrollToPosition(position)
+        } else {
+            layoutManager?.scrollToPosition(position)
+        }
+    }
+}
+
+fun RecyclerView.isPositionFullVisible(position: Int): Boolean {
     val view = findViewHolderForAdapterPosition(position)?.itemView
     // Scroll to position if the view for the current position is null (not currently part of
     // layout manager children), or it's not completely visible.
-    if (view == null || layoutManager?.isViewPartiallyVisible(view, false, true) == true) {
-        post {
-            if (isSmooth) {
-                smoothScrollToPosition(position)
-            } else {
-                scrollToPosition(position)
-            }
-        }
-    }
+    return !(view == null || layoutManager?.isViewPartiallyVisible(view, false, true) == true)
 }

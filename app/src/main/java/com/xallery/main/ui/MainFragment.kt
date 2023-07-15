@@ -2,9 +2,9 @@ package com.xallery.main.ui
 
 import android.graphics.Rect
 import android.os.Bundle
-import android.transition.TransitionInflater
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.view.View
 import androidx.annotation.DrawableRes
+import androidx.collection.LongSparseArray
 import androidx.core.view.marginBottom
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
@@ -17,6 +17,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.xallery.album.repo.PictureFlowViewModel
 import com.xallery.album.ui.PictureFlowFragment
 import com.xihh.base.android.BaseFragment
+import com.xihh.base.android.FragmentExitSharedElementCallback
 import com.xihh.base.delegate.NavAction
 import com.xihh.base.ui.FadedPageTransformer
 import com.xihh.xallery.databinding.FragmentMainBinding
@@ -31,6 +32,14 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
 
     private val pagerAdapter by lazy {
         object : FragmentStateAdapter(this) {
+
+            private val fragments =
+                FragmentStateAdapter::class.java.getDeclaredField("mFragments").apply {
+                    isAccessible = true
+                }.get(this) as LongSparseArray<Fragment>
+
+            fun getFragment(position: Int) = fragments[getItemId(position)]
+
             override fun getItemCount(): Int = pageList.size
 
             override fun createFragment(position: Int): Fragment {
@@ -109,22 +118,16 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
      * that affect the flow.
      */
     private fun prepareTransitions() {
-        exitTransition = TransitionInflater.from(requireContext())
-            .inflateTransition(com.xihh.xallery.R.transition.grid_exit_transition_main)
-
-        postponeEnterTransition()
-
-        vb.root.viewTreeObserver.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                vb.root.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                startPostponedEnterTransition()
+        setExitSharedElementCallback(object : FragmentExitSharedElementCallback(this) {
+            override fun onMapSharedElements(
+                names: MutableList<String>?,
+                sharedElements: MutableMap<String, View>?,
+            ) {
+                pagerAdapter.getFragment(vb.viewpager.currentItem)?.let {
+                    getExitTransitionCallback(it)?.onMapSharedElements(names, sharedElements)
+                }
             }
         })
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        pictureFlowVM.imageRecyclerViewPool.clear()
     }
 
     private data class PageBean(

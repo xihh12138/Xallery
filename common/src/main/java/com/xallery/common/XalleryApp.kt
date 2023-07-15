@@ -46,10 +46,10 @@ class XalleryApp : BaseApplication(), CoroutineScope by MainScope(), AppBackgrou
                 }
             })
 
-            Thread.setDefaultUncaughtExceptionHandler { t, e ->
-                logf { "XalleryApp:exception:thread=$t e=${e.stackTraceToString()}" }
-                throw e
-            }
+//            Thread.setDefaultUncaughtExceptionHandler { t, e ->
+//                logf { "XalleryApp:exception:thread=$t e=${e.stackTraceToString()}" }
+//                throw e
+//            }
         }
     }
 

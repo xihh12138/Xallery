@@ -32,6 +32,16 @@ class PictureFlowAdapter(
         differ.submitList(data)
     }
 
+    fun convertToCurPosition(originPosition: Int): Int {
+        differ.currentList.forEachIndexed { index, iItemBean ->
+            if (iItemBean is PictureFlowViewModel.SourceBean && iItemBean.originPosition == originPosition) {
+                return index
+            }
+        }
+
+        return 0
+    }
+
     override fun getItemViewType(position: Int): Int =
         if (differ.currentList[position] is PictureFlowViewModel.GroupBean) {
             VIEW_TYPE_GROUP

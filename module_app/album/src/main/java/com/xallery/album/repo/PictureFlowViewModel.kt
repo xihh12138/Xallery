@@ -10,6 +10,7 @@ import com.xallery.common.repository.db.model.Source
 import com.xallery.common.repository.delegate.ISourceRepository
 import com.xallery.common.repository.delegate.SourceRepositoryImpl
 import com.xallery.common.util.MediaStoreFetcher
+import com.xallery.picture.SourceBroadcaster
 import com.xihh.base.android.appContext
 import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.LoadingDelegate
@@ -40,6 +41,18 @@ class PictureFlowViewModel : ViewModel(),
     val imageRecyclerViewPool = RecycledViewPool().apply {
         setMaxRecycledViews(PictureFlowAdapter.VIEW_TYPE_SOURCE, 15)
         setMaxRecycledViews(PictureFlowAdapter.VIEW_TYPE_GROUP, 6)
+    }
+
+    var curOriginPosition = 0
+
+    private val sourceBroadcaster = object : SourceBroadcaster(appContext) {
+        override fun onSourceChange(source: Source, position: Int) {
+            curOriginPosition = position
+        }
+    }
+
+    init {
+        sourceBroadcaster.register(this)
     }
 
     fun postAction(action: NavAction) = viewModelScope.launch {
@@ -128,6 +141,11 @@ class PictureFlowViewModel : ViewModel(),
             }
             itemBeanList
         }
+
+    override fun onCleared() {
+        super.onCleared()
+        imageRecyclerViewPool.clear()
+    }
 
     data class GroupBean(val name: String) : IItemBean {
 

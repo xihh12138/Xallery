@@ -9,8 +9,8 @@ import com.xihh.base.delegate.NavigationImpl
 class RouteViewModel : ViewModel(), NavigationDelegate by NavigationImpl() {
 
     companion object {
-        const val ROUTE_FLAG_MAIN = 1 shl 0
-        const val ROUTE_FLAG_PICTURE = 1 shl 1
+        const val ROUTE_FLAG_MAIN = 1
+        const val ROUTE_FLAG_PICTURE = 2
     }
 }
 

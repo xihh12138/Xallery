@@ -15,27 +15,33 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.app.SharedElementCallback
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.xallery.common.util.MediaStoreFetcher
+import com.xallery.picture.SourceBroadcaster
 import com.xallery.picture.databinding.ActivitySourceDetailBinding
-import com.xallery.picture.repo.PictureDetailsViewModel
+import com.xallery.picture.repo.SourceDetailsViewModel
 import com.xihh.base.android.BaseActivity
+import com.xihh.base.android.appContext
 import com.xihh.base.ui.FadedPageTransformer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
     private val vm by lazy {
         ViewModelProvider(
             this,
-            PictureDetailsViewModel.Factory(
+            SourceDetailsViewModel.Factory(
                 intent.getIntExtra(EXTRA_FILTER_TYPE, MediaStoreFetcher.FilterType.FILTER_ALL),
                 intent.getIntExtra(EXTRA_POSITION, 0)
             )
-        )[PictureDetailsViewModel::class.java]
+        )[SourceDetailsViewModel::class.java]
     }
 
     private val pagerAdapter = SourceDetailAdapter()
+
+    private val sourceBroadcaster = SourceBroadcaster(appContext)
 
     override fun onPrepareAnimation() {
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -50,7 +56,10 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
                 names: MutableList<String>,
                 sharedElements: MutableMap<String, View>,
             ) {
-//
+                vm.curSourceFlow.value?.let { pair ->
+                    sourceBroadcaster.updateSource(pair.first, pair.second)
+                }
+
                 if (vb.viewpager.childCount > 0) {
                     sharedElements[names[0]] = vb.viewpager.getChildAt(0)
                 }
@@ -61,15 +70,14 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
     override fun initView(savedInstanceState: Bundle?) {
         vb.viewpager.adapter = pagerAdapter
         vb.viewpager.setPageTransformer(FadedPageTransformer())
+        vb.viewpager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                vm.updateCurPosition(position)
+            }
+        })
 
         lifecycleScope.launch {
-//            vm.curSourceFlow.collectLatest {
-//                val source = it?.first ?: return@collectLatest
-//                vb.image.loadUri(source.uri, source.key, false, false) {
-//                    vb.image.transitionName = source.id.toString()
-//                    startPostponedEnterTransition()
-//                }
-//            }
             vm.sourceListFlow.collectLatest {
                 it ?: return@collectLatest
                 pagerAdapter.updateData(it)
@@ -79,29 +87,37 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
                 }
             }
         }
+        sourceBroadcaster.register(lifecycle)
     }
 
-    class TransitionLauncher : ActivityResultContract<Pair<Pair<Int, Int>, View>, Int>() {
+    class TransitionLauncher : ActivityResultContract<Map<String, Any>, Map<String, Any>?>() {
 
-        override fun createIntent(context: Context, input: Pair<Pair<Int, Int>, View>): Intent {
+        override fun createIntent(context: Context, input: Map<String, Any>): Intent {
+            val filterType = input["filterType"] as Int
+            val position = input["position"] as Int
+            val view = (input["view"] as WeakReference<*>).get() as View
             return Intent(context, SourceDetailActivity::class.java)
                 .putExtra(
                     ActivityResultContracts.StartActivityForResult.EXTRA_ACTIVITY_OPTIONS_BUNDLE,
                     ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        context as Activity, input.second, input.second.transitionName
+                        context as Activity, view, view.transitionName
                     ).toBundle()
                 )
-                .putExtra(EXTRA_FILTER_TYPE, input.first.first)
-                .putExtra(EXTRA_POSITION, input.first.second)
+                .putExtra(EXTRA_FILTER_TYPE, filterType)
+                .putExtra(EXTRA_POSITION, position)
         }
 
-        override fun parseResult(resultCode: Int, intent: Intent?): Int {
-            return resultCode
+        override fun parseResult(resultCode: Int, intent: Intent?): Map<String, Any>? {
+            return intent.takeIf { resultCode == RESULT_OK }?.let {
+                mapOf("originPosition" to it.getIntExtra(EXTRA_RESULT_POSITION, 0))
+            }
         }
     }
 
     companion object {
         const val EXTRA_FILTER_TYPE = "EXTRA_FILTER_TYPE"
         const val EXTRA_POSITION = "EXTRA_POSITION"
+
+        const val EXTRA_RESULT_POSITION = "EXTRA_RESULT_POSITION"
     }
 }

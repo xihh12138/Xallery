@@ -103,18 +103,22 @@ object ActivityTask : ActivityLifecycleCallbacks {
 
     override fun onActivityStarted(activity: Activity) {
         visibleActivityList.add(activity)
+        logx { "ActivityTask: onActivityStarted   $activity" }
     }
 
     override fun onActivityResumed(activity: Activity) {
         frontActivityList.add(activity)
+        logx { "ActivityTask: onActivityResumed   $activity" }
     }
 
     override fun onActivityPaused(activity: Activity) {
         frontActivityList.remove(activity)
+        logx { "ActivityTask: onActivityPaused   $activity" }
     }
 
     override fun onActivityStopped(activity: Activity) {
         visibleActivityList.remove(activity)
+        logx { "ActivityTask: onActivityStopped   $activity" }
         if (visibleActivityList.isEmpty()) {
             appBackgroundListeners.forEach {
                 it.onBackground()

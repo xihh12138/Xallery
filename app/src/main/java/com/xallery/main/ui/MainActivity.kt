@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.view.View
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -16,14 +15,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.xallery.common.repository.RouteViewModel
 import com.xallery.common.repository.config
-import com.xallery.common.repository.db.model.Source
 import com.xallery.common.ui.LoadingHost
 import com.xallery.common.ui.LoadingHostImpl
 import com.xallery.common.ui.LottieHost
 import com.xallery.common.ui.LottieHostImpl
 import com.xallery.common.ui.view.CommonDialogFragment
 import com.xallery.common.util.toast
-import com.xallery.picture.ui.SourceDetailActivity
+import com.xihh.base.android.ActivityExitSharedElementCallback
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.SuspendActivityResultContract.Companion.registerForActivityResult
 import com.xihh.base.delegate.NavAction
@@ -31,7 +29,6 @@ import com.xihh.base.util.*
 import com.xihh.xallery.R
 import com.xihh.xallery.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
-import java.lang.ref.WeakReference
 
 class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by LoadingHostImpl(),
     LottieHost by LottieHostImpl() {
@@ -50,14 +47,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
             }
         })
 
-    private val sourceDetailLauncher =
-        registerForActivityResult(SourceDetailActivity.TransitionLauncher()) {
-
-        }
-
     private val vm by lazy { ViewModelProvider(this)[MainViewModel::class.java] }
 
     private val routeVm by lazy { ViewModelProvider(this)[RouteViewModel::class.java] }
+
+    override fun onPrepareAnimation() {
+        super.onPrepareAnimation()
+        setExitSharedElementCallback(object : ActivityExitSharedElementCallback(this) {})
+    }
 
     override fun initView(savedInstanceState: Bundle?) {
         initFragment(savedInstanceState)
@@ -73,7 +70,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 //                            val pictureDetailsFragment = PictureDetailsFragment()
                             supportFragmentManager.beginTransaction().disallowAddToBackStack()
                                 .add(
-                                    vb.container.id,
+                                    vb.rootContainer.id,
                                     MainFragment::class.java,
                                     null,
                                     MainFragment::class.simpleName
@@ -89,29 +86,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                     }
 
                     RouteViewModel.ROUTE_FLAG_PICTURE -> {
-                        routeVm.arrangeAction {
-                            val filterType = it.extras?.get("filterType") as Int
-                            val position = it.extras?.get("position") as Int
-                            val view = (it.extras?.get("view") as WeakReference<*>).get() as View
-                            sourceDetailLauncher.launch((filterType to position) to view)
+//                        lifecycleScope.launch {
+//                            val result = sourceDetailLauncher.get(it.extras!!)
+//                            it.onResultCallBack?.invoke(result)
+//                        }
+//                        val view = (it.extras?.get("view") as WeakReference<*>).get() as View
 //                            supportFragmentManager.beginTransaction()
 //                                .setReorderingAllowed(true)
 //                                .addSharedElement(view, view.transitionName)
-////                                .replace(
-////                                    vb.container.id,
-////                                    PictureDetailsFragment::class.java,
-////                                    null,
-////                                    PictureDetailsFragment::class.simpleName
-////                                )
-//                                .show(
-//                                    supportFragmentManager.findFragmentByTag(
-//                                        PictureDetailsFragment::class.simpleName
-//                                    )!!
+//                                .replace(
+//                                    vb.rootContainer.id,
+//                                    PictureDetailsFragment::class.java,
+//                                    null,
+//                                    PictureDetailsFragment::class.simpleName
 //                                )
-//                                .hide(supportFragmentManager.findFragmentByTag(MainFragment::class.simpleName)!!)
+////                                .show(
+////                                    supportFragmentManager.findFragmentByTag(
+////                                        PictureDetailsFragment::class.simpleName
+////                                    )!!
+////                                )
+////                                .hide(supportFragmentManager.findFragmentByTag(MainFragment::class.simpleName)!!)
 //                                .addToBackStack(PictureDetailsFragment::class.simpleName)
 //                                .commit()
-                        }
                     }
                 }
             }

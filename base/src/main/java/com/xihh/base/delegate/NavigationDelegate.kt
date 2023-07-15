@@ -73,7 +73,14 @@ class NavigationImpl : NavigationDelegate {
 
 data class NavAction(
     val flag: Int,
-    val extras: Map<String, Any>? = null
+    val extras: Map<String, Any>? = null,
+    val onResultCallBack: ((Map<String, Any>?) -> Unit)? = null
 ) {
     constructor(flag: Int, vararg pair: Pair<String, Any>) : this(flag, mapOf(*pair))
+
+    constructor(
+        flag: Int,
+        vararg pair: Pair<String, Any>,
+        onResultCallBack: ((Map<String, Any>?) -> Unit)
+    ) : this(flag, mapOf(*pair), onResultCallBack)
 }
