@@ -3,7 +3,6 @@ package com.xallery.album.repo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView.RecycledViewPool
-import com.xallery.album.R
 import com.xallery.album.ui.PictureFlowAdapter
 import com.xallery.common.repository.config
 import com.xallery.common.repository.db.model.Source
@@ -11,12 +10,15 @@ import com.xallery.common.repository.delegate.ISourceRepository
 import com.xallery.common.repository.delegate.SourceRepositoryImpl
 import com.xallery.common.util.MediaStoreFetcher
 import com.xallery.picture.SourceBroadcaster
+import com.xihh.base.R
 import com.xihh.base.android.appContext
 import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.LoadingDelegate
 import com.xihh.base.delegate.NavAction
 import com.xihh.base.util.getCurDayStartCalendar
 import com.xihh.base.util.getCurYearStartCalendar
+import com.xihh.base.util.getMDString
+import com.xihh.base.util.getYMDString
 import com.xihh.base.util.setToDayStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -164,29 +166,15 @@ class PictureFlowViewModel : ViewModel(),
         }
 
         companion object {
-            fun getToday() = GroupBean(appContext.getString(R.string.today))
-            fun getYesterday() = GroupBean(appContext.getString(R.string.yesterday))
-            fun getBeforeYesterday() = GroupBean(appContext.getString(R.string.before_yesterday))
+            fun getToday() = GroupBean(appContext.getString(R.string.calendar_today))
+            fun getYesterday() = GroupBean(appContext.getString(R.string.calendar_yesterday))
+            fun getBeforeYesterday() =
+                GroupBean(appContext.getString(R.string.calendar_before_yesterday))
 
-            fun getMD(calendar: Calendar, locale: Locale) = GroupBean(
-                "${
-                    calendar.getDisplayName(
-                        Calendar.MONTH, Calendar.SHORT_FORMAT, locale
-                    )
-                }${
-                    calendar.get(Calendar.DAY_OF_MONTH)
-                }${appContext.getString(R.string.day)}"
-            )
+            fun getMD(calendar: Calendar, locale: Locale) = GroupBean(calendar.getMDString(locale))
 
-            fun getYMD(calendar: Calendar, locale: Locale) = GroupBean(
-                "${calendar.get(Calendar.YEAR)}${appContext.getString(R.string.year)}${
-                    calendar.getDisplayName(
-                        Calendar.MONTH,
-                        Calendar.SHORT_FORMAT,
-                        locale
-                    )
-                }${calendar.get(Calendar.DAY_OF_MONTH)}${appContext.getString(R.string.day)}"
-            )
+            fun getYMD(calendar: Calendar, locale: Locale) =
+                GroupBean(calendar.getYMDString(locale))
         }
 
     }
@@ -230,10 +218,10 @@ class PictureFlowViewModel : ViewModel(),
         const val USER_ACTION_KEY_JUMP_POS = "position"
 
         val filterTypeMap = arrayOf(
-            MediaStoreFetcher.FilterType.FILTER_ALL,
+            MediaStoreFetcher.FilterType.FILTER_VISUAL_MEDIA,
             MediaStoreFetcher.FilterType.FILTER_VIDEOS,
             MediaStoreFetcher.FilterType.FILTER_GIFS,
-            MediaStoreFetcher.FilterType.FILTER_ALL
+            MediaStoreFetcher.FilterType.FILTER_VISUAL_MEDIA
         )
     }
 }

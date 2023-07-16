@@ -21,26 +21,30 @@ class SourceRepositoryImpl : ISourceRepository {
         filterType: Int, sortColumn: String?, isSortDesc: Boolean, resultNum: Int,
     ): List<Source> {
         logx { "getSourceList: filterType=$filterType sortColumn=$sortColumn isSortDesc=$isSortDesc resultNum=$resultNum" }
-        val selectionMimeType =
-            if (filterType and MediaStoreFetcher.FilterType.FILTER_IMAGES != 0) {
-                when {
-                    filterType and MediaStoreFetcher.FilterType.FILTER_GIFS != 0 -> {
-                        Constant.MimeType.GIF
-                    }
-
-                    else -> {
-                        Constant.MimeType.IMAGE_START
-                    }
+        val selectionMimeTypeBuilder = StringBuilder()
+        if (filterType and MediaStoreFetcher.FilterType.FILTER_IMAGES != 0) {
+            val selectionMimeType = when {
+                filterType and MediaStoreFetcher.FilterType.FILTER_GIFS == MediaStoreFetcher.FilterType.FILTER_GIFS -> {
+                    Constant.MimeType.GIF
                 }
-            } else if (filterType and MediaStoreFetcher.FilterType.FILTER_VIDEOS != 0) {
-                Constant.MimeType.VIDEO_START
-            } else {
-                null
+
+                else -> {
+                    Constant.MimeType.IMAGE_START
+                }
             }
+            selectionMimeTypeBuilder.append(" mimeType LIKE '$selectionMimeType%' OR")
+        }
+        if (filterType and MediaStoreFetcher.FilterType.FILTER_VIDEOS != 0) {
+            selectionMimeTypeBuilder.append(" mimeType LIKE '${Constant.MimeType.VIDEO_START}%' OR")
+        }
+        selectionMimeTypeBuilder.let {
+            val length = it.length
+            it.deleteRange(length - 3, length)
+        }
 
         val sql = StringBuilder("SELECT * FROM Source")
-        if (selectionMimeType != null) {
-            sql.append(" WHERE mimeType LIKE '$selectionMimeType%'")
+        if (selectionMimeTypeBuilder.isNotBlank()) {
+            sql.append(" WHERE$selectionMimeTypeBuilder")
         }
         if (sortColumn != null) {
             sql.append(" ORDER BY $sortColumn")

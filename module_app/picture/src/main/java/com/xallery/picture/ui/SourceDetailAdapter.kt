@@ -25,9 +25,7 @@ class SourceDetailAdapter : RecyclerView.Adapter<SourceDetailAdapter.VH>() {
         val position = holder.adapterPosition
         val source = sourceList?.getOrNull(position) ?: return
 
-        holder.source.loadUri(source.uri, source.key, false, false) {
-
-        }
+        holder.source.loadUri(source.uri, source.key, false, false)
     }
 
     override fun getItemCount() = sourceList?.size ?: 0

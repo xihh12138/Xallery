@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_today">今天</string>
+    <string name="calendar_yesterday">昨天</string>
+    <string name="calendar_before_yesterday">前天</string>
+
+    <string name="calendar_year">年</string>
+    <string name="calendar_day">日</string>
+</resources>

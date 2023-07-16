@@ -38,8 +38,13 @@ class MediaStoreFetcher {
 
         if (isVersionGreater(Build.VERSION_CODES.O)) {
             val queryArgs = Bundle()
-            queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selections)
-            queryArgs.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionsArgs)
+            if (selections.isNotBlank() && selectionsArgs.isNotEmpty()) {
+                queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selections)
+                queryArgs.putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    selectionsArgs
+                )
+            }
             if (isVersionGreater(Build.VERSION_CODES.R)) {
                 queryArgs.putString(
                     ContentResolver.QUERY_ARG_SQL_SORT_ORDER,
@@ -154,7 +159,7 @@ class MediaStoreFetcher {
         val args = LinkedList<String>()
         if (filterType and FilterType.FILTER_IMAGES != 0) {
             when {
-                filterType and FilterType.FILTER_GIFS != 0 -> {
+                filterType and FilterType.FILTER_GIFS == FilterType.FILTER_GIFS -> {
                     selection.append("${MediaStore.Images.Media.MIME_TYPE} = ? OR ")
                     args.add(Constant.MimeType.GIF)
                 }
@@ -175,7 +180,7 @@ class MediaStoreFetcher {
     }
 
     data class QueryParams(
-        @FilterType val filterType: Int = FilterType.FILTER_ALL,
+        @FilterType val filterType: Int = FilterType.FILTER_NONE,
         val resultNum: Int = -1,
         val sortColumn: String = MediaStore.Images.Media._ID,
         val desc: Boolean = true,
@@ -183,19 +188,25 @@ class MediaStoreFetcher {
 
     @IntDef(
         value = [
+            FilterType.FILTER_NONE,
             FilterType.FILTER_IMAGES,
             FilterType.FILTER_VIDEOS,
             FilterType.FILTER_GIFS,
-            FilterType.FILTER_ALL,
+            FilterType.FILTER_VISUAL_MEDIA,
         ]
     )
     @Retention(AnnotationRetention.SOURCE)
     annotation class FilterType {
         companion object {
-            const val FILTER_ALL = 0
+            const val FILTER_NONE = 0
             const val FILTER_IMAGES = 1
             const val FILTER_VIDEOS = 1 shl 1
             const val FILTER_GIFS = FILTER_IMAGES + (1 shl 2)
+
+            /**
+             * 视觉媒体
+             **/
+            const val FILTER_VISUAL_MEDIA = FILTER_IMAGES + FILTER_VIDEOS
         }
     }
 }

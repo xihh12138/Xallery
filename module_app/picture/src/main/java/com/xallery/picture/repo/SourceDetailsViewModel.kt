@@ -9,6 +9,7 @@ import com.xallery.common.repository.config
 import com.xallery.common.repository.db.model.Source
 import com.xallery.common.repository.delegate.ISourceRepository
 import com.xallery.common.repository.delegate.SourceRepositoryImpl
+import com.xallery.picture.repo.bean.SourcePageInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,8 +20,8 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
 
     private var position = 0
 
-    private val _curSourceFlow = MutableStateFlow<Pair<Source, Int>?>(null)
-    val curSourceFlow = _curSourceFlow.asStateFlow()
+    private val _curSourceFlow = MutableStateFlow<SourcePageInfo?>(null)
+    val sourcePageInfoFlow = _curSourceFlow.asStateFlow()
 
     private val _sourceListFlow = MutableStateFlow<List<Source>?>(null)
     val sourceListFlow = _sourceListFlow.asStateFlow()
@@ -31,7 +32,7 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
             val isSortDesc = config.isSortDesc
             val sourceList = getSourceList(filterType, sortColumn, isSortDesc)
 
-            _curSourceFlow.emit(sourceList[position] to position)
+            _curSourceFlow.emit(SourcePageInfo(sourceList[position], position, sourceList.size))
 
             _sourceListFlow.emit(sourceList)
         }
@@ -44,8 +45,10 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
     }
 
     fun updateCurPosition(position: Int) = viewModelScope.launch {
-        sourceListFlow.value?.getOrNull(position)?.let {
-            _curSourceFlow.emit(it to position)
+        sourceListFlow.value?.let { list ->
+            list.getOrNull(position)?.let {
+                _curSourceFlow.emit(SourcePageInfo(it, position, list.size))
+            }
         }
     }
 

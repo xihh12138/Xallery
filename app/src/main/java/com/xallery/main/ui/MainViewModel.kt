@@ -26,7 +26,7 @@ class MainViewModel : ViewModel(), ILoading by LoadingDelegate(), IToast by Toas
 
     fun fetchAllSource() = viewModelScope.launch {
         val sourceList =
-            mediaStoreFetcher.fetchSource(MediaStoreFetcher.QueryParams(MediaStoreFetcher.FilterType.FILTER_ALL))
+            mediaStoreFetcher.fetchSource(MediaStoreFetcher.QueryParams(MediaStoreFetcher.FilterType.FILTER_NONE))
 
         db.sourceDao.addAll(sourceList)
     }
