@@ -18,22 +18,24 @@ open class SourceBroadcaster(private val context: Context) : BroadcastReceiver()
 
     private val hasRegistered = AtomicBoolean(false)
 
-    fun register(lifecycle  : Lifecycle? = null) {
+    fun register(lifecycle: Lifecycle? = null): SourceBroadcaster {
         if (hasRegistered.get()) {
-            return
+            return this
         }
         hasRegistered.set(true)
         context.registerReceiver(this, IntentFilter(ACTION))
         lifecycle?.addObserver(this)
+        return this
     }
 
-    fun register(viewModel: ViewModel) {
+    fun register(viewModel: ViewModel): SourceBroadcaster {
         if (hasRegistered.get()) {
-            return
+            return this
         }
         hasRegistered.set(true)
         context.registerReceiver(this, IntentFilter(ACTION))
         viewModel.addCloseable(this)
+        return this
     }
 
     fun updateSource(source: Source, position: Int) {
@@ -42,7 +44,7 @@ open class SourceBroadcaster(private val context: Context) : BroadcastReceiver()
         )
     }
 
-    open fun onSourceChange(source: Source, position: Int){
+    open fun onSourceChange(source: Source, position: Int) {
 
     }
 

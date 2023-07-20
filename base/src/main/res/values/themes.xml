@@ -1,7 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.TransparentStatus.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge">
-    </style>
+    <style name="Theme.TransparentStatus.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge"></style>
 
     <style name="Theme.TransparentStatus" parent="Theme.TransparentStatus.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -31,4 +30,15 @@
         <!-- 是否变暗 -->
         <!--        <item name="android:backgroundDimEnabled">false</item>-->
     </style>
+
+    <style name="TranslucentNoTitleTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="background">@android:color/transparent</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="title">null</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
 </resources>

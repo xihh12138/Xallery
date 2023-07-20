@@ -51,11 +51,7 @@ class PictureFlowViewModel : ViewModel(),
         override fun onSourceChange(source: Source, position: Int) {
             curOriginPosition = position
         }
-    }
-
-    init {
-        sourceBroadcaster.register(this)
-    }
+    }.register(this)
 
     fun postAction(action: NavAction) = viewModelScope.launch {
         _userActionFlow.emit(action)

@@ -7,7 +7,8 @@ import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
 
-class SourceDetailAdapter : RecyclerView.Adapter<SourceDetailAdapter.VH>() {
+class SourceDetailAdapter(private val onSourceDragListener: PictureView.DragListener) :
+    RecyclerView.Adapter<SourceDetailAdapter.VH>() {
 
     private var sourceList: List<Source>? = null
 
@@ -26,6 +27,16 @@ class SourceDetailAdapter : RecyclerView.Adapter<SourceDetailAdapter.VH>() {
         val source = sourceList?.getOrNull(position) ?: return
 
         holder.source.loadUri(source.uri, source.key, false, false)
+    }
+
+    override fun onViewAttachedToWindow(holder: VH) {
+        super.onViewAttachedToWindow(holder)
+        holder.source.addDragListener(onSourceDragListener)
+    }
+
+    override fun onViewDetachedFromWindow(holder: VH) {
+        super.onViewDetachedFromWindow(holder)
+        holder.source.removeDragListener(onSourceDragListener)
     }
 
     override fun getItemCount() = sourceList?.size ?: 0

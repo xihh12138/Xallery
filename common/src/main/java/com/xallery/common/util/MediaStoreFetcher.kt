@@ -118,7 +118,7 @@ class MediaStoreFetcher {
                     try {
                         appContext.contentResolver.openFileDescriptor(source.uri, "r")
                     } catch (e: Exception) {
-                        logf { "fetchSource: openFileDescriptor失败 name=$name,mimeType=$mimeType,uri=${source.uri},path=$path,size=$size" }
+                        logx { "fetchSource: openFileDescriptor失败 name=$name,mimeType=$mimeType,uri=${source.uri},path=$path,size=$size" }
                         null
                     }?.use {
                         val latlng = ExifInterface(it.fileDescriptor).latLong

@@ -32,8 +32,7 @@ import com.xihh.base.util.setTimeMills
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
@@ -42,15 +41,39 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             this,
             SourceDetailsViewModel.Factory(
                 intent.getIntExtra(
-                    EXTRA_FILTER_TYPE,
-                    MediaStoreFetcher.FilterType.FILTER_VISUAL_MEDIA
+                    EXTRA_FILTER_TYPE, MediaStoreFetcher.FilterType.FILTER_VISUAL_MEDIA
                 ),
                 intent.getIntExtra(EXTRA_POSITION, 0)
             )
         )[SourceDetailsViewModel::class.java]
     }
 
-    private val pagerAdapter = SourceDetailAdapter()
+    private val pagerAdapter = SourceDetailAdapter(object : PictureView.DragListener {
+        override fun onDrag(
+            totalDistanceX: Float,
+            totalDistanceY: Float,
+            totalDistance: Float,
+            distanceRatio: Float,
+        ) {
+            val ratio = Math.min(1f, distanceRatio)
+            val alpha = (255 - ratio * 255).toInt()
+            vb.root.background.alpha = alpha
+            vb.llInfo.alpha = 1 - ratio
+        }
+
+        override fun onFinish(finalDistanceRatio: Float) {
+            if (finalDistanceRatio > 0.7f) {
+                onBackPressedDispatcher.onBackPressed()
+            } else {
+                vb.root.background.alpha = 255
+                vb.llInfo.alpha = 1f
+            }
+        }
+
+        override fun onFlingCancel() {
+            onBackPressedDispatcher.onBackPressed()
+        }
+    })
 
     private val sourceBroadcaster = SourceBroadcaster(appContext)
 
@@ -60,18 +83,17 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
     }
 
     override fun onPrepareAnimation() {
-//        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.sharedElementEnterTransition = TransitionInflater.from(this)
             .inflateTransition(com.xihh.base.R.transition.image_shared_element_transition)
             .addListener(
                 object : TransitionListener {
                     override fun onTransitionStart(transition: Transition?) {
-                        logx { "onTransitionStart: " }
+                        logx { "SourceDetailActivity: onTransitionStart   " }
                         vb.llInfo.isVisible = false
                     }
 
                     override fun onTransitionEnd(transition: Transition?) {
-                        logx { "onTransitionEnd: " }
+                        logx { "SourceDetailActivity: onTransitionEnd   " }
                         vb.llInfo.isVisible = true
                     }
 
@@ -91,7 +113,7 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             override fun onMapSharedElements(
                 names: MutableList<String>, sharedElements: MutableMap<String, View>,
             ) {
-                logx { "onMapSharedElements: " }
+                logx { "SourceDetailActivity: onMapSharedElements   " }
                 vm.sourcePageInfoFlow.value?.let { info ->
                     sourceBroadcaster.updateSource(info.source, info.position)
                 }
@@ -104,8 +126,15 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
     }
 
     override fun initView(savedInstanceState: Bundle?) {
+        // TODO: 这里有些东西没有搞懂，如果没有下面这行的话再次进入这个activity背景会是透明的，后面有空再研究
+        vb.root.background.alpha = 255
         vb.viewpager.adapter = pagerAdapter
         vb.viewpager.setPageTransformer(FadedPageTransformer())
+//        vb.viewpager.let {
+//            (it.javaClass.getDeclaredField("mRecyclerView").apply {
+//                isAccessible = true
+//            }.get(it) as RecyclerView).edgeEffectFactory = DampEdgeEffectFactory()
+//        }
         vb.viewpager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -130,7 +159,7 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
     }
 
     private fun updateInfoVIew(position: Int) {
-        logx { "updateInfoVIew: position=$position" }
+        logx { "SourceDetailActivity: updateInfoVIew   position=$position" }
         val source = vm.sourcePageInfoFlow.value?.source ?: return
         val calendar = Calendar.getInstance().setTimeMills(source.addTimestamp)
         val locale = Locale.getDefault()

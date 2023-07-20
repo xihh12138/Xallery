@@ -4,9 +4,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.SharedElementCallback
 import androidx.fragment.app.Fragment
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 
 abstract class ActivityExitSharedElementCallback(private val activity: AppCompatActivity) :
-    SharedElementCallback() {
+    MaterialContainerTransformSharedElementCallback() {
 
     protected val method =
         Fragment::class.java.getDeclaredMethod("getExitTransitionCallback").apply {
@@ -17,8 +18,7 @@ abstract class ActivityExitSharedElementCallback(private val activity: AppCompat
         (method.invoke(fragment) as? SharedElementCallback)
 
     override fun onMapSharedElements(
-        names: MutableList<String>?,
-        sharedElements: MutableMap<String, View>?,
+        names: MutableList<String>, sharedElements: MutableMap<String, View>
     ) {
         super.onMapSharedElements(names, sharedElements)
         activity.supportFragmentManager.fragments.forEach { fragment ->
@@ -28,7 +28,7 @@ abstract class ActivityExitSharedElementCallback(private val activity: AppCompat
 }
 
 abstract class ActivityEnterSharedElementCallback(private val activity: AppCompatActivity) :
-    SharedElementCallback() {
+    MaterialContainerTransformSharedElementCallback() {
 
     protected val method =
         Fragment::class.java.getDeclaredMethod("getEnterTransitionCallback").apply {
@@ -39,8 +39,7 @@ abstract class ActivityEnterSharedElementCallback(private val activity: AppCompa
         (method.invoke(fragment) as? SharedElementCallback)
 
     override fun onMapSharedElements(
-        names: MutableList<String>?,
-        sharedElements: MutableMap<String, View>?,
+        names: MutableList<String>, sharedElements: MutableMap<String, View>,
     ) {
         super.onMapSharedElements(names, sharedElements)
         activity.supportFragmentManager.fragments.forEach { fragment ->
@@ -61,8 +60,7 @@ abstract class FragmentExitSharedElementCallback(private val fragment: Fragment)
         (method.invoke(fragment) as? SharedElementCallback)
 
     override fun onMapSharedElements(
-        names: MutableList<String>?,
-        sharedElements: MutableMap<String, View>?,
+        names: MutableList<String>?, sharedElements: MutableMap<String, View>?,
     ) {
         super.onMapSharedElements(names, sharedElements)
         fragment.childFragmentManager.fragments.forEach { fragment ->
@@ -84,8 +82,7 @@ abstract class FragmentEnterSharedElementCallback(private val fragment: Fragment
         (method.invoke(fragment) as? SharedElementCallback)
 
     override fun onMapSharedElements(
-        names: MutableList<String>?,
-        sharedElements: MutableMap<String, View>?,
+        names: MutableList<String>?, sharedElements: MutableMap<String, View>?,
     ) {
         super.onMapSharedElements(names, sharedElements)
         fragment.childFragmentManager.fragments.forEach { fragment ->
