@@ -3,19 +3,27 @@ package com.xallery.picture.ui
 import android.animation.FloatArrayEvaluator
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.net.Uri
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
+import android.view.View
 import android.view.ViewConfiguration
 import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.widget.OverScroller
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.graphics.withScale
 import androidx.core.graphics.withTranslation
 import androidx.core.view.GestureDetectorCompat
 import com.xihh.base.util.logx
-import java.util.*
+import java.util.LinkedList
+
 
 class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(context, attrs),
     ActionListener by ActionListenerHelper() {
@@ -28,13 +36,24 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private var firstScrollDirection = DIRECTION_NONE
 
     private val dragDistanceRatioInterpolator = AccelerateInterpolator()
-    private var lastDragDistanceRatio = 0f
+    private var dragDistanceRatio = 0f
     private var dragCancelDistance = 0
 
     private var dragX = 0f
     private var dragY = 0f
 
-    private val flingCancelVelocity = ViewConfiguration.get(context).scaledMaximumFlingVelocity shr 1
+    private val flingMinVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
+    private val flingCancelVelocity = flingMinVelocity shl 2
+
+    private val scaleFlingScroller = OverScroller(context, DecelerateInterpolator())
+
+    private var originalDragX = 0f
+    private var originalDragY = 0f
+    private var smallScale = 0f
+    private var bigScale = 0f
+    private var zoomScale = 1f
+    private val isZoom: Boolean get() = zoomScale > smallScale
+    private var zoomSmallestDistance = 0
 
     init {
         val scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
@@ -67,40 +86,43 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 val totalDistanceX = e2.x - e1.x
                 val totalDistanceY = e2.y - e1.y
 
-                val curScrollDirection = firstScrollDirection
-                val curNestedOrientation = nestedOrientation
                 handleNestedScroll(
                     totalDistanceX,
                     totalDistanceY,
                     distanceX,
                     distanceY,
-                    curScrollDirection,
-                    curNestedOrientation
+                    firstScrollDirection,
+                    nestedOrientation
                 )
 
-                handleScrollGesture(totalDistanceX, totalDistanceY)
+                if (isZoom) {
+                    if (!scaleFlingScroller.isFinished) {
+                        scaleFlingScroller.forceFinished(true)
+                    }
 
-                return true
-            }
-
-            override fun onFling(
-                e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float
-            ): Boolean {
-                // ---------- 求速度的矢量和 ----------
-                val totalVelocity = Math.sqrt(
-                    Math.pow(Math.abs(velocityX).toDouble(), 2.0)
-                            + Math.pow(Math.abs(velocityY).toDouble(), 2.0)
-                ).toFloat()
-
-                if (totalVelocity >= flingCancelVelocity) {
-                    notifyListenersFlingCancel()
+                    handleScaleScrollGesture(distanceX, distanceY)
+                } else {
+                    handleFloatingScrollGesture(totalDistanceX, totalDistanceY)
                 }
 
                 return true
             }
 
+            override fun onFling(
+                e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float,
+            ): Boolean {
+                // ---------- 求速度的矢量和 ----------
+                handleFling(velocityX, velocityY)
+
+                return true
+            }
+
+            /**
+             * onDoubleTap()方法是只要用户的手指第二次down，就会立刻触发，如果需要监听用户双击抬起操作需要在onDoubleTapEvent()里判断
+             **/
             override fun onDoubleTapEvent(e: MotionEvent): Boolean {
-                return super.onDoubleTapEvent(e)
+                handleDoubleClickEvent(e)
+                return true
             }
         }).apply {
             setIsLongpressEnabled(false)
@@ -109,16 +131,98 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private val scaleGestureDetector =
         ScaleGestureDetector(context, object : OnScaleGestureListener {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                return false
+                logx { "PictureView: onScale   scaleFactor=${detector.scaleFactor} (${detector.previousSpan}-${detector.currentSpan}) focus=(${detector.focusX},${detector.focusY})" }
+                handleScaleGesture(detector.scaleFactor)
+                return true
             }
 
             override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                return false
+                return true
             }
 
             override fun onScaleEnd(detector: ScaleGestureDetector) {
+                // ---------- 缩放结束，需要计算边界值，自动消除图片空隙 ----------
+                val drawableWidth = drawable.bounds.width().toFloat()
+                val drawableHeight = drawable.bounds.height().toFloat()
+                val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2)
+                val verticalClamp = Math.abs((drawableHeight * zoomScale - height) / 2)
+                val newDragX = dragX.coerceIn(-horizonClamp, horizonClamp)
+                val newDragY = dragY.coerceIn(-verticalClamp, verticalClamp)
+
+                resetValueAnimator.setObjectValues(
+                    floatArrayOf(dragX, dragY, zoomScale),
+                    floatArrayOf(newDragX, newDragY, zoomScale)
+                )
+                resetValueAnimator.start()
+
+                postOnAnimation(resetRunnable)
             }
         })
+
+    private fun handleScaleGesture(scaleFactor: Float) {
+        zoomScale = (zoomScale * scaleFactor).coerceIn(0.1f, 20f)
+
+        invalidate()
+    }
+
+    private val resetValueAnimator =
+        ValueAnimator.ofObject(FloatArrayEvaluator(), floatArrayOf()).setDuration(
+            resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+        )
+
+    private val resetRunnable = object : Runnable {
+        override fun run() {
+            val value = resetValueAnimator.animatedValue as? FloatArray ?: return
+            dragX = value[0]
+            dragY = value[1]
+            zoomScale = value[2]
+
+            invalidate()
+
+            if (resetValueAnimator.isRunning) {
+                postOnAnimation(this)
+            }
+        }
+    }
+
+    private val zoomValueAnimator =
+        ValueAnimator.ofObject(FloatArrayEvaluator(), floatArrayOf()).setDuration(
+            resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+        )
+
+    private val zoomRunnable = object : Runnable {
+        override fun run() {
+            val value = zoomValueAnimator.animatedValue as? FloatArray ?: return
+            dragX = value[0]
+            dragY = value[1]
+            zoomScale = value[2]
+
+            invalidate()
+
+            if (zoomValueAnimator.isRunning) {
+                postOnAnimation(this)
+            }
+        }
+    }
+
+    private val scaleFlingRunnable = object : Runnable {
+
+        override fun run() {
+            if (scaleFlingScroller.computeScrollOffset()) {
+                if (isZoom) {
+                    handleScaleFling(
+                        scaleFlingScroller.currX.toFloat(), scaleFlingScroller.currY.toFloat()
+                    )
+                }
+
+                postOnAnimation(this)
+            } else {
+                if (!isZoom) {
+                    reset()
+                }
+            }
+        }
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         var handle = scaleGestureDetector.onTouchEvent(event)
@@ -132,7 +236,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             }
         }
 
-        logx { "PictureView: onTouchEvent($handle) event=$event" }
+//        logx { "PictureView: onTouchEvent($handle) event=$event" }
 
         return handle
     }
@@ -164,7 +268,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 }
             }
 
-            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
+//            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
             if (firstScrollDirection.isHorizontalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
                 reset()
@@ -190,7 +294,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 }
             }
 
-            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
+//            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
             if (firstScrollDirection.isVerticalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
                 reset()
@@ -200,67 +304,45 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         }
     }
 
-    private fun handleScrollGesture(totalDistanceX: Float, totalDistanceY: Float) {
-        dragX = totalDistanceX
-        dragY = totalDistanceY
+    private fun handleScaleScrollGesture(distanceX: Float, distanceY: Float) {
+        dragX -= distanceX
+        dragY -= distanceY
 
-        notifyListenersDrag(totalDistanceX, totalDistanceY)
+        val drawable = drawable ?: return
+        val drawableWidth = drawable.bounds.width().toFloat()
+        val drawableHeight = drawable.bounds.height().toFloat()
+        val width = width
+        val height = height
+        val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2)
+        val verticalClamp = Math.abs((drawableHeight * zoomScale - height) / 2)
+        dragX = dragX.coerceIn(-horizonClamp, horizonClamp)
+        dragY = dragY.coerceIn(-verticalClamp, verticalClamp)
 
-        logx { "PictureView: handleScrollGesture dragX=$dragX dragY=$dragY" }
+        logx { "PictureView: handleScaleScrollGesture dragX=$dragX dragY=$dragY" }
 
         invalidate()
     }
 
-    private val resetValueAnimator =
-        ValueAnimator.ofObject(FloatArrayEvaluator(), floatArrayOf()).setDuration(
-            resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-        )
+    private fun handleScaleFling(totalDistanceX: Float, totalDistanceY: Float) {
+        dragX = totalDistanceX
+        dragY = totalDistanceY
 
-    private val resetRunnable = object : Runnable {
-        override fun run() {
-            if (resetValueAnimator.isRunning) {
-                val value = resetValueAnimator.animatedValue as FloatArray
-                dragX = value[0]
-                dragY = value[1]
+        val drawable = drawable ?: return
+        val drawableWidth = drawable.bounds.width().toFloat()
+        val drawableHeight = drawable.bounds.height().toFloat()
+        val width = width
+        val height = height
+        val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2)
+        val verticalClamp = Math.abs((drawableHeight * zoomScale - height) / 2)
+        dragX = dragX.coerceIn(-horizonClamp, horizonClamp)
+        dragY = dragY.coerceIn(-verticalClamp, verticalClamp)
 
-                invalidate()
+        logx { "PictureView: handleScaleFling totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY dragX=$dragX dragY=$dragY" }
 
-                postOnAnimation(this)
-            }
-        }
+        invalidate()
     }
 
-    private fun reset() {
-        firstScrollDirection = DIRECTION_NONE
-        parent.requestDisallowInterceptTouchEvent(false)
-
-        notifyListenersDragFinish(lastDragDistanceRatio)
-        lastDragDistanceRatio = 0f
-
-        resetValueAnimator.setObjectValues(floatArrayOf(dragX, dragY), floatArrayOf(0f, 0f))
-        resetValueAnimator.start()
-
-        postOnAnimation(resetRunnable)
-    }
-
-//    override fun canScrollHorizontally(direction: Int): Boolean {
-//        return true
-//    }
-//
-//    override fun canScrollVertically(direction: Int): Boolean {
-//        return true
-//    }
-//
-//    private fun canScroll(orientation: Int, delta: Float): Boolean {
-//        val direction = -delta.sign.toInt()
-//        return when (orientation) {
-//            ViewPager2.ORIENTATION_HORIZONTAL -> canScrollHorizontally(direction)
-//            ViewPager2.ORIENTATION_VERTICAL -> canScrollVertically(direction)
-//            else -> throw IllegalArgumentException()
-//        }
-//    }
-
-    private fun notifyListenersDrag(totalDistanceX: Float, totalDistanceY: Float) {
+    private fun handleFloatingScrollGesture(totalDistanceX: Float, totalDistanceY: Float) {
         val dragCancelDistance = dragCancelDistance
         val totalDistance = Math.sqrt(
             Math.pow(Math.abs(totalDistanceX).toDouble(), 2.0)
@@ -269,9 +351,126 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         val distanceRatio = dragDistanceRatioInterpolator.getInterpolation(
             (totalDistance / dragCancelDistance).coerceIn(0f, 1f)
         )
+        val zoomRatio = totalDistance / zoomSmallestDistance
 
-        lastDragDistanceRatio = distanceRatio
+        dragX = totalDistanceX
+        dragY = totalDistanceY
+        zoomScale = (1 - zoomRatio)
+        dragDistanceRatio = distanceRatio
 
+        notifyListenersDrag(totalDistanceX, totalDistanceY, totalDistance, distanceRatio)
+
+//        logx { "PictureView: handleFloatingScrollGesture dragX=$dragX dragY=$dragY" }
+
+        invalidate()
+    }
+
+    private var isPostingDoubleClick = false
+
+    private fun handleDoubleClickEvent(e: MotionEvent) {
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                isPostingDoubleClick = true
+
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                isPostingDoubleClick = false
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (isPostingDoubleClick) {
+                    // ---------- 响应双击缩放 ----------
+                    if (isZoom) {
+                        // ---------- 缩小 ----------
+                        zoomValueAnimator.setObjectValues(
+                            floatArrayOf(dragX, dragY, zoomScale),
+                            floatArrayOf(0f, 0f, smallScale)
+                        )
+                    } else {
+                        // ---------- 放大 ----------
+                        val drawable = drawable ?: return
+                        val drawableWidth = drawable.bounds.width().toFloat()
+                        val drawableHeight = drawable.bounds.height().toFloat()
+                        val width = width
+                        val height = height
+                        var newDragX = (e.x - width / 2f) - (e.x - width / 2) * bigScale / zoomScale
+                        var newDragY =
+                            (e.y - height / 2f) - (e.y - height / 2) * bigScale / zoomScale
+                        val horizonClamp = Math.abs((drawableWidth * bigScale - width) / 2)
+                        val verticalClamp = Math.abs((drawableHeight * bigScale - height) / 2)
+                        newDragX = newDragX.coerceIn(-horizonClamp, horizonClamp)
+                        newDragY = newDragY.coerceIn(-verticalClamp, verticalClamp)
+                        zoomValueAnimator.setObjectValues(
+                            floatArrayOf(dragX, dragY, zoomScale),
+                            floatArrayOf(newDragX, newDragY, bigScale)
+                        )
+                    }
+                    zoomValueAnimator.start()
+
+                    postOnAnimation(zoomRunnable)
+                }
+            }
+        }
+    }
+
+    private fun reset() {
+        // ---------- 如果在惯性滑动，则延迟重置 ----------
+        if (/*!flingOverScroller.computeScrollOffset() && */!(isZoom || zoomValueAnimator.isRunning)) {
+            firstScrollDirection = DIRECTION_NONE
+            parent.requestDisallowInterceptTouchEvent(false)
+
+            resetValueAnimator.setObjectValues(
+                floatArrayOf(dragX, dragY, zoomScale),
+                floatArrayOf(0f, 0f, smallScale)
+            )
+            resetValueAnimator.start()
+
+            postOnAnimation(resetRunnable)
+
+            notifyListenersDragFinish(dragDistanceRatio)
+            dragDistanceRatio = 0f
+        }
+    }
+
+    private fun handleFling(velocityX: Float, velocityY: Float) {
+        if (resetValueAnimator.isRunning) {
+            return
+        }
+        val totalVelocity = Math.sqrt(
+            Math.pow(Math.abs(velocityX).toDouble(), 2.0)
+                    + Math.pow(Math.abs(velocityY).toDouble(), 2.0)
+        ).toFloat()
+        val drawable = drawable ?: return
+        val drawableWidth = drawable.bounds.width()
+        val curDrawableHeight = drawable.bounds.height()
+        val width = width.toFloat()
+        val height = height.toFloat()
+
+        val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2).toInt()
+        val verticalClamp = Math.abs((curDrawableHeight * zoomScale - height) / 2).toInt()
+
+        if (totalVelocity > flingMinVelocity) {
+            scaleFlingScroller.fling(
+                dragX.toInt(), dragY.toInt(),
+                velocityX.toInt(), velocityY.toInt(),
+                -horizonClamp,
+                horizonClamp,
+                -verticalClamp,
+                verticalClamp
+            )
+        }
+
+        postOnAnimation(scaleFlingRunnable)
+
+        if (!isZoom && totalVelocity >= flingCancelVelocity) {
+            notifyListenersFlingCancel()
+        }
+    }
+
+    private fun notifyListenersDrag(
+        totalDistanceX: Float, totalDistanceY: Float, totalDistance: Float, distanceRatio: Float,
+    ) {
         dragListenerList.forEach {
             it.onDrag(totalDistanceX, totalDistanceY, totalDistance, distanceRatio)
         }
@@ -291,15 +490,68 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
 
     override fun onDraw(canvas: Canvas) {
         canvas.withTranslation(dragX, dragY) {
-            super.onDraw(canvas)
+            canvas.withScale(zoomScale, zoomScale, width / 2f, height / 2f) {
+                super.onDraw(canvas)
+            }
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
-        dragCancelDistance = Math.min(w, h)
+        // ---------- 因为入场出场动画会导致activity和view大小改变，所以这里加一个延时处理，避免在入场和出场时改变大小 ----------
+        removeCallbacks(sizeChangeRunnable)
+        postDelayed(sizeChangeRunnable, 100)
     }
+
+    private val sizeChangeRunnable = object : Runnable {
+        override fun run() {
+            val width = width.toFloat()
+            val height = height.toFloat()
+
+            dragCancelDistance = Math.min(width, height).toInt()
+            zoomSmallestDistance = Math.max(width, height).toInt()
+
+            val drawable = drawable ?: return
+            val drawableWidth = drawable.bounds.width().toFloat()
+            val drawableHeight = drawable.bounds.height().toFloat()
+
+            originalDragX = (width - drawableWidth) / 2
+            originalDragY = (height - drawableHeight) / 2
+
+            if (drawableWidth / drawableHeight > width / height) {
+                logx { "PictureView: sizeChangeRunnable   图片比视图宽" }
+                smallScale = width / drawableWidth
+                bigScale = height / drawableHeight
+            } else {
+                logx { "PictureView: sizeChangeRunnable   图片比视图高" }
+                smallScale = height / drawableHeight
+                bigScale = width / drawableWidth
+            }
+            logx { "PictureView: sizeChangeRunnable drawableWidth=$drawableWidth drawableHeight=$drawableHeight width=$width height=$height smallScale=$smallScale  bigScale=$bigScale" }
+
+            zoomScale = smallScale
+
+            invalidate()
+        }
+    }
+
+//    override fun canScrollHorizontally(direction: Int): Boolean {
+//        return true
+//    }
+//
+//    override fun canScrollVertically(direction: Int): Boolean {
+//        return true
+//    }
+//
+//    private fun canScroll(orientation: Int, delta: Float): Boolean {
+//        val direction = -delta.sign.toInt()
+//        return when (orientation) {
+//            ViewPager2.ORIENTATION_HORIZONTAL -> canScrollHorizontally(direction)
+//            ViewPager2.ORIENTATION_VERTICAL -> canScrollVertically(direction)
+//            else -> throw IllegalArgumentException()
+//        }
+//    }
 
     interface DragListener {
         fun onDrag(
@@ -311,7 +563,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
 
         fun onFlingCancel()
 
-        fun onFinish(finalDistanceRatio: Float) {}
+        fun onFinish(finalDistanceRatio: Float)
     }
 
     companion object {
@@ -354,4 +606,39 @@ class ActionListenerHelper : ActionListener {
     override fun removeAllDragListener() {
         mDragListenerList.clear()
     }
+}
+
+interface BitmapLoader {
+
+    fun init(view: View)
+
+    fun loadUri(uri: Uri)
+
+    fun getBitmap(): Bitmap?
+
+}
+
+class BitmapLoaderImpl : BitmapLoader {
+
+    private var bitmap: Bitmap? = null
+
+    private lateinit var view: View
+
+    override fun init(view: View) {
+        this.view = view
+    }
+
+    override fun loadUri(uri: Uri) {
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        view.context.contentResolver.openFileDescriptor(uri, "r")?.use {
+            BitmapFactory.decodeFileDescriptor(it.fileDescriptor, null, options)
+            options.inJustDecodeBounds = false
+            options.inDensity = options.outWidth
+            options.inTargetDensity = view.width
+            bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor, null, options)
+        }
+    }
+
+    override fun getBitmap(): Bitmap? = bitmap
 }

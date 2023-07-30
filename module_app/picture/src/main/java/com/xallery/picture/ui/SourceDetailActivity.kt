@@ -62,7 +62,7 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
         }
 
         override fun onFinish(finalDistanceRatio: Float) {
-            if (finalDistanceRatio > 0.7f) {
+            if (finalDistanceRatio > 0.2f) {
                 onBackPressedDispatcher.onBackPressed()
             } else {
                 vb.root.background.alpha = 255

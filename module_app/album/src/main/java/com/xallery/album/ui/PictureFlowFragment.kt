@@ -14,6 +14,7 @@ import com.xallery.album.repo.PictureFlowViewModel
 import com.xallery.common.repository.db.model.Source
 import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseFragment
+import com.xihh.base.ui.DampEdgeEffectFactory
 import com.xihh.base.util.isPositionFullVisible
 import com.xihh.base.util.logx
 import com.xihh.base.util.scrollToFullVisible
@@ -91,6 +92,7 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         vb.rv.setItemViewCacheSize(count * 2)
         vb.rv.setHasFixedSize(true)
         vb.rv.setRecycledViewPool(vm.imageRecyclerViewPool)
+        vb.rv.edgeEffectFactory = DampEdgeEffectFactory()
         vb.rv.addOnScrollListener(object : OnScrollListener() {
             private var hasDisallow = false
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {

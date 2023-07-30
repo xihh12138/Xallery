@@ -26,6 +26,7 @@ class SourceDetailAdapter(private val onSourceDragListener: PictureView.DragList
         val position = holder.adapterPosition
         val source = sourceList?.getOrNull(position) ?: return
 
+//        holder.source.setImageURI(source.uri)
         holder.source.loadUri(source.uri, source.key, false, false)
     }
 

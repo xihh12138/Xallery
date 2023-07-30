@@ -26,8 +26,8 @@ class PictureDetailsFragment :
         lifecycleScope.launch {
             vm.sourcePageInfoFlow.collectLatest {
                 val source = it?.source ?: return@collectLatest
-                vb.image.loadUri(source.uri, source.key, false, false) {
-                }
+//                vb.image.loadUri(source.uri, source.key, false, false) {
+//                }
                 vb.image.transitionName = source.id.toString()
 //                startPostponedEnterTransition()
             }
