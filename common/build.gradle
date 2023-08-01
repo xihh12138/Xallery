@@ -42,7 +42,7 @@ android {
             zipAlignEnabled true// 是否开启字节对齐
             crunchPngs true//是否对 PNG 图片进行压缩处理
 
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules.pro'
 
             buildConfigField("Boolean", "LOGGABLE", "false")
         }
@@ -51,7 +51,7 @@ android {
             zipAlignEnabled false// 是否开启字节对齐
             crunchPngs false//是否对 PNG 图片进行压缩处理
 
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules.pro'
 
             buildConfigField("Boolean", "LOGGABLE", "true")
         }

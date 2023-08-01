@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_info">信息</string>
+    <string name="title_title">标题</string>
+    <string name="title_date">日期</string>
+    <string name="title_resolution">解析度</string>
+</resources>

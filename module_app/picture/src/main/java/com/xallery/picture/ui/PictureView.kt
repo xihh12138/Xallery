@@ -8,12 +8,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.net.Uri
 import android.util.AttributeSet
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
+import android.view.*
 import android.view.ScaleGestureDetector.OnScaleGestureListener
-import android.view.View
-import android.view.ViewConfiguration
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.OverScroller
@@ -22,7 +18,9 @@ import androidx.core.graphics.withScale
 import androidx.core.graphics.withTranslation
 import androidx.core.view.GestureDetectorCompat
 import com.xihh.base.util.logx
-import java.util.LinkedList
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.pow
 
 
 class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(context, attrs),
@@ -34,6 +32,11 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private val touchDownSlop: Int
     private var nestedOrientation = ORIENTATION_HORIZONTAL
     private var firstScrollDirection = DIRECTION_NONE
+    private var floatingDraggableDirection = if (nestedOrientation == ORIENTATION_HORIZONTAL) {
+        DIRECTION_DOWN
+    } else {
+        DIRECTION_RIGHT
+    }
 
     private val dragDistanceRatioInterpolator = AccelerateInterpolator()
     private var dragDistanceRatio = 0f
@@ -42,8 +45,8 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private var dragX = 0f
     private var dragY = 0f
 
-    private val flingMinVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
-    private val flingCancelVelocity = flingMinVelocity shl 2
+    private val flingCancelVelocity =
+        ViewConfiguration.get(context).scaledMinimumFlingVelocity shl 2
 
     private val scaleFlingScroller = OverScroller(context, DecelerateInterpolator())
 
@@ -75,7 +78,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         GestureDetectorCompat(context, object : GestureDetector.SimpleOnGestureListener() {
 
             override fun onDown(e: MotionEvent): Boolean {
-                parent.requestDisallowInterceptTouchEvent(true)
                 return true
             }
 
@@ -89,17 +91,11 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 handleNestedScroll(
                     totalDistanceX,
                     totalDistanceY,
-                    distanceX,
-                    distanceY,
                     firstScrollDirection,
                     nestedOrientation
                 )
 
                 if (isZoom) {
-                    if (!scaleFlingScroller.isFinished) {
-                        scaleFlingScroller.forceFinished(true)
-                    }
-
                     handleScaleScrollGesture(distanceX, distanceY)
                 } else {
                     handleFloatingScrollGesture(totalDistanceX, totalDistanceY)
@@ -112,7 +108,9 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float,
             ): Boolean {
                 // ---------- 求速度的矢量和 ----------
-                handleFling(velocityX, velocityY)
+                if (!resetValueAnimator.isRunning) {
+                    handleScaleFling(velocityX, velocityY)
+                }
 
                 return true
             }
@@ -159,12 +157,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             }
         })
 
-    private fun handleScaleGesture(scaleFactor: Float) {
-        zoomScale = (zoomScale * scaleFactor).coerceIn(0.1f, 20f)
-
-        invalidate()
-    }
-
     private val resetValueAnimator =
         ValueAnimator.ofObject(FloatArrayEvaluator(), floatArrayOf()).setDuration(
             resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
@@ -210,7 +202,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         override fun run() {
             if (scaleFlingScroller.computeScrollOffset()) {
                 if (isZoom) {
-                    handleScaleFling(
+                    handleScaleFlingAnimation(
                         scaleFlingScroller.currX.toFloat(), scaleFlingScroller.currY.toFloat()
                     )
                 }
@@ -244,8 +236,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private fun handleNestedScroll(
         totalDistanceX: Float,
         totalDistanceY: Float,
-        distanceX: Float,
-        distanceY: Float,
         curScrollDirection: Int,
         curNestedOrientation: Int,
     ) {
@@ -269,42 +259,55 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             }
 
 //            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
-            if (firstScrollDirection.isHorizontalDirection) {
+            if (isZoom) {
+//                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
+                parent.requestDisallowInterceptTouchEvent(true)
+            } else if (firstScrollDirection.isHorizontalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
+//                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
                 reset()
-            } else {
+            } else if (floatingDraggableDirection == firstScrollDirection) {
+//                    logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             }
         } else {
             when {
-                distanceX > touchRightSlop && !curScrollDirection.isHorizontalDirection -> {
+                totalDistanceX > touchRightSlop && !curScrollDirection.isHorizontalDirection -> {
                     firstScrollDirection = DIRECTION_RIGHT
                 }
 
-                distanceX < touchLeftSlop && !curScrollDirection.isHorizontalDirection -> {
+                totalDistanceX < touchLeftSlop && !curScrollDirection.isHorizontalDirection -> {
                     firstScrollDirection = DIRECTION_LEFT
                 }
 
-                distanceY < touchUpSlop && !curScrollDirection.isVerticalDirection -> {
+                totalDistanceY < touchUpSlop && !curScrollDirection.isVerticalDirection -> {
                     firstScrollDirection = DIRECTION_UP
                 }
 
-                distanceY > touchDownSlop && !curScrollDirection.isVerticalDirection -> {
+                totalDistanceY > touchDownSlop && !curScrollDirection.isVerticalDirection -> {
                     firstScrollDirection = DIRECTION_DOWN
                 }
             }
 
 //            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
-            if (firstScrollDirection.isVerticalDirection) {
+            if (isZoom) {
+//                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
+                parent.requestDisallowInterceptTouchEvent(true)
+            } else if (firstScrollDirection.isVerticalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
+//                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
                 reset()
-            } else {
+            } else if (floatingDraggableDirection == firstScrollDirection) {
+//                logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             }
         }
     }
 
     private fun handleScaleScrollGesture(distanceX: Float, distanceY: Float) {
+        if (!scaleFlingScroller.isFinished) {
+            scaleFlingScroller.forceFinished(true)
+        }
         dragX -= distanceX
         dragY -= distanceY
 
@@ -323,7 +326,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         invalidate()
     }
 
-    private fun handleScaleFling(totalDistanceX: Float, totalDistanceY: Float) {
+    private fun handleScaleFlingAnimation(totalDistanceX: Float, totalDistanceY: Float) {
         dragX = totalDistanceX
         dragY = totalDistanceY
 
@@ -414,6 +417,44 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         }
     }
 
+    private fun handleScaleFling(velocityX: Float, velocityY: Float) {
+        val totalVelocity = Math.sqrt(
+            abs(velocityX).toDouble().pow(2.0) + abs(velocityY).toDouble().pow(2.0)
+        ).toFloat()
+
+        val drawable = drawable ?: return
+        val drawableWidth = drawable.bounds.width()
+        val curDrawableHeight = drawable.bounds.height()
+        val width = width.toFloat()
+        val height = height.toFloat()
+
+        val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2).toInt()
+        val verticalClamp = Math.abs((curDrawableHeight * zoomScale - height) / 2).toInt()
+
+        if (totalVelocity > ViewConfiguration.get(context).scaledMinimumFlingVelocity) {
+            scaleFlingScroller.fling(
+                dragX.toInt(), dragY.toInt(),
+                velocityX.toInt(), velocityY.toInt(),
+                -horizonClamp,
+                horizonClamp,
+                -verticalClamp,
+                verticalClamp
+            )
+
+            postOnAnimation(scaleFlingRunnable)
+
+            if (!isZoom && totalVelocity >= flingCancelVelocity) {
+                notifyListenersFlingCancel()
+            }
+        }
+    }
+
+    private fun handleScaleGesture(scaleFactor: Float) {
+        zoomScale = (zoomScale * scaleFactor).coerceIn(0.1f, 20f)
+
+        invalidate()
+    }
+
     private fun reset() {
         // ---------- 如果在惯性滑动，则延迟重置 ----------
         if (/*!flingOverScroller.computeScrollOffset() && */!(isZoom || zoomValueAnimator.isRunning)) {
@@ -430,41 +471,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
 
             notifyListenersDragFinish(dragDistanceRatio)
             dragDistanceRatio = 0f
-        }
-    }
-
-    private fun handleFling(velocityX: Float, velocityY: Float) {
-        if (resetValueAnimator.isRunning) {
-            return
-        }
-        val totalVelocity = Math.sqrt(
-            Math.pow(Math.abs(velocityX).toDouble(), 2.0)
-                    + Math.pow(Math.abs(velocityY).toDouble(), 2.0)
-        ).toFloat()
-        val drawable = drawable ?: return
-        val drawableWidth = drawable.bounds.width()
-        val curDrawableHeight = drawable.bounds.height()
-        val width = width.toFloat()
-        val height = height.toFloat()
-
-        val horizonClamp = Math.abs((drawableWidth * zoomScale - width) / 2).toInt()
-        val verticalClamp = Math.abs((curDrawableHeight * zoomScale - height) / 2).toInt()
-
-        if (totalVelocity > flingMinVelocity) {
-            scaleFlingScroller.fling(
-                dragX.toInt(), dragY.toInt(),
-                velocityX.toInt(), velocityY.toInt(),
-                -horizonClamp,
-                horizonClamp,
-                -verticalClamp,
-                verticalClamp
-            )
-        }
-
-        postOnAnimation(scaleFlingRunnable)
-
-        if (!isZoom && totalVelocity >= flingCancelVelocity) {
-            notifyListenersFlingCancel()
         }
     }
 
