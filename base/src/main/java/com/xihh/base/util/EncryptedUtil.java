@@ -7,23 +7,6 @@ import java.util.Random;
 
 public class EncryptedUtil {
 
-    public static String getRandomStr() {
-        StringBuilder builder = new StringBuilder();
-        String randomStr = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        int count = randomStr.length() - 1;
-        Random random = new Random();
-
-        for (int i = 0; i < 8; i++) {
-            int id = random.nextInt(count);
-            String s = randomStr.substring(id, id + 1);
-
-            builder.append(s);
-
-        }
-
-        return builder.toString();
-    }
-
     public static String getTimestamp() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 

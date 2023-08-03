@@ -1,5 +1,6 @@
 package com.xallery.common.repository
 
+import android.provider.MediaStore
 import com.xallery.common.R
 import com.xallery.common.repository.constant.Constant
 import com.xihh.base.android.appContext
@@ -30,7 +31,7 @@ class Config internal constructor() {
         }
 
     var sortColumn: String
-        get() = sp.getString(Constant.SPKey.SORT_COLUMN, "id")!!
+        get() = sp.getString(Constant.SPKey.SORT_COLUMN, "modifiedTimestamp")!!
         set(value) {
             sp.edit().putString(Constant.SPKey.SORT_COLUMN, value).sync()
         }

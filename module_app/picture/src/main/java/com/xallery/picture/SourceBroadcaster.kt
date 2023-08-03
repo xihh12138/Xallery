@@ -1,45 +1,14 @@
 package com.xallery.picture
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
 import com.xallery.common.repository.db.model.Source
-import com.xihh.base.android.appContext
-import java.io.Closeable
-import java.util.concurrent.atomic.AtomicBoolean
+import com.xihh.base.android.BaseBroadcaster
 
-open class SourceBroadcaster(private val context: Context) : BroadcastReceiver(), Closeable,
-    DefaultLifecycleObserver {
-
-    private val hasRegistered = AtomicBoolean(false)
-
-    fun register(lifecycle: Lifecycle? = null): SourceBroadcaster {
-        if (hasRegistered.get()) {
-            return this
-        }
-        hasRegistered.set(true)
-        context.registerReceiver(this, IntentFilter(ACTION))
-        lifecycle?.addObserver(this)
-        return this
-    }
-
-    fun register(viewModel: ViewModel): SourceBroadcaster {
-        if (hasRegistered.get()) {
-            return this
-        }
-        hasRegistered.set(true)
-        context.registerReceiver(this, IntentFilter(ACTION))
-        viewModel.addCloseable(this)
-        return this
-    }
+open class SourceBroadcaster(context: Context) : BaseBroadcaster(context, ACTION) {
 
     fun updateSource(source: Source, position: Int) {
-        appContext.sendBroadcast(
+        sendBroadcast(
             Intent(ACTION).putExtra(EXTRA_SOURCE, source).putExtra(EXTRA_POSITION, position)
         )
     }
@@ -55,15 +24,6 @@ open class SourceBroadcaster(private val context: Context) : BroadcastReceiver()
             intent.getParcelableExtra(EXTRA_SOURCE)!!,
             intent.getIntExtra(EXTRA_POSITION, 0)
         )
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        super.onDestroy(owner)
-        close()
-    }
-
-    override fun close() {
-        context.unregisterReceiver(this)
     }
 
     companion object {

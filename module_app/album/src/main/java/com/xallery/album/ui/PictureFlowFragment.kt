@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import com.xallery.album.databinding.FragmentPictureFlowBinding
 import com.xallery.album.repo.PictureFlowViewModel
 import com.xallery.common.repository.db.model.Source
+import com.xallery.common.util.SourceDBReadyBroadcaster
 import com.xallery.picture.ui.SourceDetailActivity
 import com.xihh.base.android.BaseFragment
 import com.xihh.base.ui.DampEdgeEffectFactory
@@ -37,11 +38,21 @@ class PictureFlowFragment : BaseFragment<FragmentPictureFlowBinding, PictureFlow
         showPictureDetailWithTransition(view, pos, bean.source)
     })
 
+    private lateinit var sourceDBReadyBroadcaster: SourceDBReadyBroadcaster
+
     override fun getViewModel() =
         ViewModelProvider(requireParentFragment())[PictureFlowViewModel::class.java]
 
     override fun initView(savedInstanceState: Bundle?) {
         page = arguments?.getInt(ARGUMENT_PAGE, page) ?: 0
+        sourceDBReadyBroadcaster = object : SourceDBReadyBroadcaster(requireContext()) {
+            override fun onSourceDBReady(oldCount: Int, newCount: Int) {
+                if (oldCount != newCount) {
+                    vm.refreshSourceList(page, true)
+                }
+            }
+        }
+        sourceDBReadyBroadcaster.register(lifecycle)
         initRV()
 
         lifecycleScope.apply {

@@ -8,15 +8,32 @@ import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
 import com.xihh.base.util.get12HourHMString
 import com.xihh.base.util.getYMDString
+import com.xihh.base.util.logx
 import com.xihh.base.util.setTimeMills
 import java.util.*
 
-class SourceDetailAdapter(private val onSourceDragListener: PictureView.DragListener) :
-    RecyclerView.Adapter<SourceDetailAdapter.VH>() {
+class SourceDetailAdapter(
+    private val pictureViewListener: PictureView.DragListener,
+    private val pageListener: VerticalTwoViewPager.Listener,
+) : RecyclerView.Adapter<SourceDetailAdapter.VH>() {
 
     private val calendar = Calendar.getInstance()
 
     private var sourceList: List<Source>? = null
+
+    private val mPagerListener = object : VerticalTwoViewPager.Listener {
+        override fun onPageScroll(totalDistanceY: Float, distanceRatio: Float) {
+            pageListener.onPageScroll(totalDistanceY, distanceRatio)
+            logx { "SourceDetailAdapter: onPageScroll totalDistanceY=$totalDistanceY  distanceRatio=$distanceRatio" }
+        }
+
+        override fun onPageChange(page: Int) {
+            curVerticalPage = page
+            pageListener.onPageChange(page)
+        }
+    }
+
+    private var curVerticalPage = 0
 
     fun updateData(data: List<Source>) {
         sourceList = data
@@ -28,7 +45,7 @@ class SourceDetailAdapter(private val onSourceDragListener: PictureView.DragList
         ItemSourceDetailBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     ).apply {
         ivBack.setOnClickListener {
-//            pager.scrollToUpPage()
+            pager.scrollToFirstPage()
         }
     }
 
@@ -48,12 +65,20 @@ class SourceDetailAdapter(private val onSourceDragListener: PictureView.DragList
 
     override fun onViewAttachedToWindow(holder: VH) {
         super.onViewAttachedToWindow(holder)
-        holder.source.addDragListener(onSourceDragListener)
+        holder.source.addDragListener(pictureViewListener)
+        holder.pager.addListener(mPagerListener)
+
+        if (curVerticalPage == 0) {
+            holder.pager.scrollToFirstPage(true, false)
+        } else {
+            holder.pager.scrollToSecondPage(true, false)
+        }
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {
         super.onViewDetachedFromWindow(holder)
-        holder.source.removeDragListener(onSourceDragListener)
+        holder.source.removeDragListener(pictureViewListener)
+        holder.pager.removeListener(mPagerListener)
     }
 
     override fun getItemCount() = sourceList?.size ?: 0

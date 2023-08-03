@@ -8,16 +8,13 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!--
     Scoped storage on Android 10 (API 29) is inconvenient because users need to confirm edition on each individual file.
     So we request `WRITE_EXTERNAL_STORAGE` until Android 10 (API 29), and enable `requestLegacyExternalStorage`
     -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="30"
         tools:ignore="ScopedStorage" />
 
     <uses-permission

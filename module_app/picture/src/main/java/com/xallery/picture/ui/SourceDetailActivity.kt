@@ -73,6 +73,15 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
         override fun onFlingCancel() {
             onBackPressedDispatcher.onBackPressed()
         }
+    }, object : VerticalTwoViewPager.Listener {
+        override fun onPageScroll(totalDistanceY: Float, distanceRatio: Float) {
+            val ratio = Math.min(1f, distanceRatio)
+
+            vb.llInfo.alpha = 1 - ratio
+        }
+
+        override fun onPageChange(page: Int) {
+        }
     })
 
     private val sourceBroadcaster = SourceBroadcaster(appContext)

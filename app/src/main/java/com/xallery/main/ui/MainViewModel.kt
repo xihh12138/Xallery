@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xallery.common.repository.db.db
 import com.xallery.common.util.MediaStoreFetcher
+import com.xallery.common.util.SourceDBReadyBroadcaster
+import com.xihh.base.android.appContext
 import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.IToast
 import com.xihh.base.delegate.LoadingDelegate
@@ -25,10 +27,14 @@ class MainViewModel : ViewModel(), ILoading by LoadingDelegate(), IToast by Toas
     }
 
     fun fetchAllSource() = viewModelScope.launch {
+        val oldSourceCount = db.sourceDao.getCount()
+
         val sourceList =
             mediaStoreFetcher.fetchSource(MediaStoreFetcher.QueryParams(MediaStoreFetcher.FilterType.FILTER_NONE))
 
         db.sourceDao.addAll(sourceList)
+
+        SourceDBReadyBroadcaster(appContext).notifySourceDBReady(oldSourceCount, sourceList.size)
     }
 
     companion object {

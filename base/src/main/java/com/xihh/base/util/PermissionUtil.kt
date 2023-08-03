@@ -16,6 +16,10 @@ import androidx.core.content.ContextCompat
 fun Context.hasPermission(permission: String) =
     ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
+fun Context.hasAllPermission(permissionArray: Array<String>) = permissionArray.all {
+    ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+}
+
 fun Context.hasManageMediaPermission(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(this)
 }

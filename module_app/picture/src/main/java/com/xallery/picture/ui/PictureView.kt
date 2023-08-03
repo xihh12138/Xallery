@@ -24,7 +24,7 @@ import kotlin.math.pow
 
 
 class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(context, attrs),
-    ActionListener by ActionListenerHelper() {
+    PictureViewActionListener by PictureViewActionListenerHelper() {
 
     private val touchUpSlop: Int
     private val touchLeftSlop: Int
@@ -587,15 +587,19 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     }
 }
 
-interface ActionListener {
+
+interface PictureViewActionListener {
 
     val dragListenerList: List<PictureView.DragListener>
+
     fun addDragListener(listener: PictureView.DragListener)
+
     fun removeDragListener(listener: PictureView.DragListener)
+
     fun removeAllDragListener()
 }
 
-class ActionListenerHelper : ActionListener {
+class PictureViewActionListenerHelper : PictureViewActionListener {
 
     private val mDragListenerList = LinkedList<PictureView.DragListener>()
 

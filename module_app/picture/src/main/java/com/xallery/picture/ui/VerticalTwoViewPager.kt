@@ -8,13 +8,13 @@ import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
-import android.widget.OverScroller
 import androidx.core.view.GestureDetectorCompat
 import com.xihh.base.util.logx
+import java.util.*
 
 
-class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(context, attrs) {
+class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(context, attrs),
+    VerticalTwoViewPagerActionListener by VerticalTwoViewPagerActionListenerHelper() {
 
     private val interceptSlop = ViewConfiguration.get(context).scaledTouchSlop
     private var isInterceptTouchEvent = false
@@ -23,9 +23,10 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
     private var pageChangeDistance = 0
     private var pageChangeVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity shl 2
 
-    private val curPage get() = if (scrollY < height) 0 else 1
+    private var cachePage = 0
+    val curPage get() = if (scrollY < height) 0 else 1
 
-    private val flingScroller = OverScroller(context, DecelerateInterpolator())
+//    private val flingScroller = OverScroller(context, DecelerateInterpolator())
 
     private val gestureDetector =
         GestureDetectorCompat(context, object : SimpleOnGestureListener() {
@@ -73,24 +74,39 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
             val value = resetValueAnimator.animatedValue as? IntArray ?: return
             scrollY = value[0]
 
+            val new = value[0].toFloat()
+            notifyListenersPageScroll(new, new / height)
+
             if (resetValueAnimator.isRunning) {
                 postOnAnimation(this)
-            }
-        }
-    }
-
-    private val flingRunnable = object : Runnable {
-
-        override fun run() {
-            handleFlingAnimation(flingScroller.currX, flingScroller.currY)
-
-            if (flingScroller.computeScrollOffset()) {
-                postOnAnimation(this)
             } else {
-                reset()
+                if (value[0] == 0) {
+                    if (cachePage == 1) {
+                        notifyListenersPageChange(0)
+                    }
+                    cachePage = 0
+                } else {
+                    if (cachePage == 0) {
+                        notifyListenersPageChange(1)
+                    }
+                    cachePage = 1
+                }
             }
         }
     }
+
+//    private val flingRunnable = object : Runnable {
+//
+//        override fun run() {
+//            handleFlingAnimation(flingScroller.currX, flingScroller.currY)
+//
+//            if (flingScroller.computeScrollOffset()) {
+//                postOnAnimation(this)
+//            } else {
+//                reset()
+//            }
+//        }
+//    }
 
     private fun handleNestedScroll(totalDistanceX: Float, totalDistanceY: Float): Boolean {
         if (isInterceptTouchEvent) {
@@ -129,37 +145,28 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
         return isInterceptTouchEvent
     }
 
-    private fun handleScrollGesture(
-        distanceX: Float,
-        distanceY: Float,
-    ) {
-        scrollY += distanceY.toInt()
+    private fun handleScrollGesture(distanceX: Float, distanceY: Float) {
+        val new = scrollY + distanceY
+        scrollY = new.toInt()
+
+        notifyListenersPageScroll(new, new / height)
     }
 
-    private fun handleFlingAnimation(
-        totalDistanceX: Int,
-        totalDistanceY: Int,
-    ) {
-        scrollY = totalDistanceY
-    }
+//    private fun handleFlingAnimation(
+//        totalDistanceX: Int,
+//        totalDistanceY: Int,
+//    ) {
+//        scrollY = totalDistanceY
+//    }
 
     private fun handleFling(velocityX: Float, velocityY: Float) {
         if (Math.abs(velocityY) > pageChangeVelocity) {
             // ------------ 加速度大于设定好的翻页阈值，直接执行翻页动画 ------------
             if (velocityY > 0) {
-                resetValueAnimator.setObjectValues(
-                    intArrayOf(scrollY),
-                    intArrayOf(0)
-                )
+                scrollToFirstPage()
             } else {
-                resetValueAnimator.setObjectValues(
-                    intArrayOf(scrollY),
-                    intArrayOf(height)
-                )
+                scrollToSecondPage()
             }
-            resetValueAnimator.start()
-
-            postOnAnimation(resetRunnable)
         }
 //        if (Math.abs(velocityY) > ViewConfiguration.get(context).scaledMinimumFlingVelocity) {
 //            val absMaximumVelocity =
@@ -186,10 +193,10 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
     private fun handleDownGesture(downEvent: MotionEvent): Boolean {
         isInterceptTouchEvent = false
 
-        if (flingScroller.computeScrollOffset()) {
-            flingScroller.forceFinished(true)
-            isInterceptTouchEvent = true
-        }
+//        if (flingScroller.computeScrollOffset()) {
+//            flingScroller.forceFinished(true)
+//            isInterceptTouchEvent = true
+//        }
 
         if (resetValueAnimator.isRunning) {
             removeCallbacks(resetRunnable)
@@ -203,36 +210,71 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
     private fun reset() {
 //        if (flingScroller.isFinished) {
         if (!resetValueAnimator.isRunning) {
-            val scrollY = scrollY
             if (scrollY > pageChangeDistance) {
-                resetValueAnimator.setObjectValues(
-                    intArrayOf(scrollY),
-                    intArrayOf(height)
-                )
+                scrollToSecondPage()
             } else {
+                scrollToFirstPage()
+            }
+        }
+    }
+
+    fun scrollToFirstPage(needPost: Boolean = false, isSmooth: Boolean = true) {
+        val runnable = Runnable {
+            if (isSmooth) {
                 resetValueAnimator.setObjectValues(
                     intArrayOf(scrollY),
                     intArrayOf(0)
                 )
+
+                resetValueAnimator.start()
+
+                postOnAnimation(resetRunnable)
+            } else {
+                scrollY = 0
+                cachePage = 0
             }
+        }
+        if (needPost) {
+            post(runnable)
+        } else {
+            runnable.run()
+        }
+    }
 
-            resetValueAnimator.start()
+    fun scrollToSecondPage(needPost: Boolean = false, isSmooth: Boolean = true) {
+        val runnable = Runnable {
+            if (isSmooth) {
+                resetValueAnimator.setObjectValues(
+                    intArrayOf(scrollY),
+                    intArrayOf(height)
+                )
 
-            postOnAnimation(resetRunnable)
+                resetValueAnimator.start()
+
+                postOnAnimation(resetRunnable)
+            } else {
+                scrollY = height
+                cachePage = 1
+            }
+        }
+        if (needPost) {
+            post(runnable)
+        } else {
+            runnable.run()
         }
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        logx { "VerticalTwoViewPager: onInterceptTouchEvent   e=$e" }
+//        logx { "VerticalTwoViewPager: onInterceptTouchEvent   e=$e" }
         return gestureDetector.onTouchEvent(e)
     }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        logx { "VerticalTwoViewPager: onTouchEvent   e=$e" }
-        var handle = false
+//        logx { "VerticalTwoViewPager: onTouchEvent   e=$e" }
+        var handle = gestureDetector.onTouchEvent(e)
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                // ---------- 如果这里能收到down事件，说明子view没有处理，这里就是我们最后处理的机会 ----------
+                // ---------- 如果这里能收到down事件，说明子view没有处理，这里就是我们最后能够处理的机会 ----------
                 handle = true
             }
 
@@ -241,19 +283,7 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
             }
         }
 
-        return handle || gestureDetector.onTouchEvent(e)
-    }
-
-    override fun canScrollVertically(direction: Int): Boolean {
-        return if (direction > 0) {
-            scrollY < height
-        } else {
-            scrollY > 0
-        }
-    }
-
-    override fun canScrollHorizontally(direction: Int): Boolean {
-        return false
+        return handle
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -282,11 +312,60 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
         pageChangeDistance = (h * pageChangeDistanceRatio).toInt()
     }
 
-    fun scrollToUpPage(isSmooth: Boolean = true) {
-
+    override fun canScrollVertically(direction: Int): Boolean {
+        return if (direction > 0) {
+            scrollY < height
+        } else {
+            scrollY > 0
+        }
     }
 
-    fun scrollToDownPage(isSmooth: Boolean = true) {
+    override fun canScrollHorizontally(direction: Int): Boolean {
+        return false
+    }
 
+    private fun notifyListenersPageScroll(totalDistanceY: Float, distanceRatio: Float) {
+        listenerList.forEach {
+            it.onPageScroll(totalDistanceY, distanceRatio)
+        }
+    }
+
+    private fun notifyListenersPageChange(page: Int) {
+        listenerList.forEach {
+            it.onPageChange(page)
+        }
+    }
+
+    interface Listener {
+        fun onPageScroll(totalDistanceY: Float, distanceRatio: Float)
+
+        fun onPageChange(page: Int)
+    }
+}
+
+interface VerticalTwoViewPagerActionListener {
+
+    val listenerList: List<VerticalTwoViewPager.Listener>
+    fun addListener(listener: VerticalTwoViewPager.Listener)
+    fun removeListener(listener: VerticalTwoViewPager.Listener)
+    fun removeAllListener()
+}
+
+class VerticalTwoViewPagerActionListenerHelper : VerticalTwoViewPagerActionListener {
+
+    private val mListenerList = LinkedList<VerticalTwoViewPager.Listener>()
+
+    override val listenerList get() = mListenerList
+
+    override fun addListener(listener: VerticalTwoViewPager.Listener) {
+        mListenerList.add(listener)
+    }
+
+    override fun removeListener(listener: VerticalTwoViewPager.Listener) {
+        mListenerList.remove(listener)
+    }
+
+    override fun removeAllListener() {
+        mListenerList.clear()
     }
 }

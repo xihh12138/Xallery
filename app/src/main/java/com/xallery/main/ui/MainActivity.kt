@@ -130,7 +130,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
         }
 
         if (!hasPermission(storagePermission) && !permissionContract.get(storagePermission)) {
-            logx { "MainActivity: acquirePermission   hasn't Permission 1" }
+            logx { "MainActivity: acquirePermission   hasn't Permission $storagePermission" }
             toast(R.string.no_permission)
             finish()
 
@@ -144,7 +144,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
                     mediaLocationPermission
                 )
             ) {
-                logx { "MainActivity: acquirePermission   hasn't Permission 2" }
+                logx { "MainActivity: acquirePermission   hasn't Permission $mediaLocationPermission" }
                 toast(R.string.no_permission)
                 finish()
 
@@ -156,7 +156,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), LoadingHost by Loading
 
             val videoPermission = Manifest.permission.READ_MEDIA_VIDEO
             if (!hasPermission(videoPermission) && !permissionContract.get(videoPermission)) {
-                logx { "MainActivity: acquirePermission   hasn't Permission 3" }
+                logx { "MainActivity: acquirePermission   hasn't Permission $videoPermission" }
                 toast(R.string.no_permission)
                 finish()
 

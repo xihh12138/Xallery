@@ -34,6 +34,9 @@ interface SourceDao {
     @RawQuery(observedEntities = [Source::class])
     suspend fun query(sortBy: SupportSQLiteQuery): List<Source>
 
+    @Query("SELECT COUNT(id) FROM SOURCE")
+    suspend fun getCount(): Int
+
     //</editor-fold>查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查
 
 }

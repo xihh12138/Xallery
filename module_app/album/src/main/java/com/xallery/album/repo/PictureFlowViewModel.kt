@@ -15,11 +15,7 @@ import com.xihh.base.android.appContext
 import com.xihh.base.delegate.ILoading
 import com.xihh.base.delegate.LoadingDelegate
 import com.xihh.base.delegate.NavAction
-import com.xihh.base.util.getCurDayStartCalendar
-import com.xihh.base.util.getCurYearStartCalendar
-import com.xihh.base.util.getMDString
-import com.xihh.base.util.getYMDString
-import com.xihh.base.util.setToDayStart
+import com.xihh.base.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,8 +23,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 class PictureFlowViewModel : ViewModel(),
     ILoading by LoadingDelegate(),
@@ -78,67 +73,72 @@ class PictureFlowViewModel : ViewModel(),
         val isSortDesc = config.isSortDesc
         val sourceList = getSourceList(filterType, sortColumn, isSortDesc, num)
 
-        return transformToItemBeanList(sourceList)
+        return transformToItemBeanList(sortColumn, sourceList)
     }
 
-    private suspend fun transformToItemBeanList(sourceList: List<Source>): ArrayList<IItemBean> =
-        withContext(Dispatchers.IO) {
-            val itemBeanList = ArrayList<IItemBean>(sourceList.size)
+    private suspend fun transformToItemBeanList(
+        sortColumn: String, sourceList: List<Source>,
+    ): ArrayList<IItemBean> = withContext(Dispatchers.IO) {
+        val filed = Source::class.java.getDeclaredField(sortColumn)
+        filed.isAccessible = true
+        val itemBeanList = ArrayList<IItemBean>(sourceList.size)
 
-            val locale = Locale.getDefault()
-            val calendar = getCurDayStartCalendar()
-            val todayTimeMillis = calendar.timeInMillis
-            val yesterdayTimeMillis = calendar.timeInMillis - 86400000
-            val beforeYesterdayTimeMillis = calendar.timeInMillis - 86400000 * 2
-            val curYearTimeMillis = getCurYearStartCalendar().timeInMillis
+        val locale = Locale.getDefault()
+        val calendar = getCurDayStartCalendar()
+        val todayTimeMillis = calendar.timeInMillis
+        val yesterdayTimeMillis = calendar.timeInMillis - 86400000
+        val beforeYesterdayTimeMillis = calendar.timeInMillis - 86400000 * 2
+        val curYearTimeMillis = getCurYearStartCalendar().timeInMillis
 
-            sourceList.firstOrNull()?.let { first ->
-                val groupBean = if (first.addTimestamp >= todayTimeMillis) {
-                    calendar.setToDayStart(first.addTimestamp)
+        sourceList.firstOrNull()?.let { first ->
+            val sort = filed.get(first) as Long
+            val groupBean = if (sort >= todayTimeMillis) {
+                calendar.setToDayStart(sort)
+                GroupBean.getToday()
+            } else if (sort >= yesterdayTimeMillis) {
+                calendar.setToDayStart(sort)
+                GroupBean.getYesterday()
+            } else if (sort >= beforeYesterdayTimeMillis) {
+                calendar.setToDayStart(sort)
+                GroupBean.getBeforeYesterday()
+            } else if (sort >= curYearTimeMillis) {
+                calendar.setToDayStart(sort)
+                GroupBean.getMD(calendar, locale)
+            } else {
+                // ---------- show Year ----------
+                calendar.setToDayStart(sort)
+                GroupBean.getYMD(calendar, locale)
+            }
+            itemBeanList.add(groupBean)
+            itemBeanList.add(SourceBean(first, 0))
+        }
+        for (i in 1 until sourceList.size) {
+            val source = sourceList[i]
+            val sort = filed.get(source) as Long
+            if (sort < calendar.timeInMillis) {
+                val groupBean = if (sort >= todayTimeMillis) {
+                    calendar.setToDayStart(sort)
                     GroupBean.getToday()
-                } else if (first.addTimestamp >= yesterdayTimeMillis) {
-                    calendar.setToDayStart(first.addTimestamp)
+                } else if (sort >= yesterdayTimeMillis) {
+                    calendar.setToDayStart(sort)
                     GroupBean.getYesterday()
-                } else if (first.addTimestamp >= beforeYesterdayTimeMillis) {
-                    calendar.setToDayStart(first.addTimestamp)
+                } else if (sort >= beforeYesterdayTimeMillis) {
+                    calendar.setToDayStart(sort)
                     GroupBean.getBeforeYesterday()
-                } else if (first.addTimestamp >= curYearTimeMillis) {
-                    calendar.setToDayStart(first.addTimestamp)
+                } else if (sort >= curYearTimeMillis) {
+                    calendar.setToDayStart(sort)
                     GroupBean.getMD(calendar, locale)
                 } else {
                     // ---------- show Year ----------
-                    calendar.setToDayStart(first.addTimestamp)
+                    calendar.setToDayStart(sort)
                     GroupBean.getYMD(calendar, locale)
                 }
                 itemBeanList.add(groupBean)
-                itemBeanList.add(SourceBean(first, 0))
             }
-            for (i in 1 until sourceList.size) {
-                val source = sourceList[i]
-                if (source.addTimestamp < calendar.timeInMillis) {
-                    val groupBean = if (source.addTimestamp >= todayTimeMillis) {
-                        calendar.setToDayStart(source.addTimestamp)
-                        GroupBean.getToday()
-                    } else if (source.addTimestamp >= yesterdayTimeMillis) {
-                        calendar.setToDayStart(source.addTimestamp)
-                        GroupBean.getYesterday()
-                    } else if (source.addTimestamp >= beforeYesterdayTimeMillis) {
-                        calendar.setToDayStart(source.addTimestamp)
-                        GroupBean.getBeforeYesterday()
-                    } else if (source.addTimestamp >= curYearTimeMillis) {
-                        calendar.setToDayStart(source.addTimestamp)
-                        GroupBean.getMD(calendar, locale)
-                    } else {
-                        // ---------- show Year ----------
-                        calendar.setToDayStart(source.addTimestamp)
-                        GroupBean.getYMD(calendar, locale)
-                    }
-                    itemBeanList.add(groupBean)
-                }
-                itemBeanList.add(SourceBean(source, i))
-            }
-            itemBeanList
+            itemBeanList.add(SourceBean(source, i))
         }
+        itemBeanList
+    }
 
     override fun onCleared() {
         super.onCleared()

@@ -95,10 +95,10 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
             launch {
                 vm.mainPageFlow.collectLatest {
                     when (it) {
-                        MainViewModel.MAIN_PAGE_ALL -> goPage(0)
-                        MainViewModel.MAIN_PAGE_GIF -> goPage(1)
-                        MainViewModel.MAIN_PAGE_MOVIE -> goPage(2)
-                        MainViewModel.MAIN_PAGE_ELSE -> goPage(3)
+                        MainViewModel.MAIN_PAGE_ALL -> switchPage(0)
+                        MainViewModel.MAIN_PAGE_GIF -> switchPage(1)
+                        MainViewModel.MAIN_PAGE_MOVIE -> switchPage(2)
+                        MainViewModel.MAIN_PAGE_ELSE -> switchPage(3)
                     }
                 }
             }
@@ -107,7 +107,7 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
         prepareTransitions()
     }
 
-    private fun goPage(pageIndex: Int) {
+    private fun switchPage(pageIndex: Int) {
         vb.indicator.getTabAt(pageIndex)?.let {
             vb.indicator.selectTab(it)
         }
