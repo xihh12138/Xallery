@@ -2,15 +2,19 @@ package com.xallery.picture.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.RecyclerView
 import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
+import com.xihh.base.util.ScreenUtil
 import com.xihh.base.util.get12HourHMString
 import com.xihh.base.util.getYMDString
 import com.xihh.base.util.logx
 import com.xihh.base.util.setTimeMills
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class SourceDetailAdapter(
     private val pictureViewListener: PictureView.DragListener,
@@ -61,6 +65,14 @@ class SourceDetailAdapter(
         holder.tvDate.text =
             "${calendar.getYMDString(Locale.getDefault())} · ${calendar.get12HourHMString(Locale.getDefault())}"
         holder.tvResolution.text = "${source.width} × ${source.height}"
+        holder.tvSize.text = "${source.sizeBytes} B"
+        holder.tvUri.text = source.uri.toString()
+        if (source.path != null) {
+            holder.tvPath.text = source.path
+            holder.tvPath.isVisible = true
+        } else {
+            holder.tvPath.isVisible = false
+        }
     }
 
     override fun onViewAttachedToWindow(holder: VH) {
@@ -73,6 +85,8 @@ class SourceDetailAdapter(
         } else {
             holder.pager.scrollToSecondPage(true, false)
         }
+        holder.pager.getChildAt(1)
+            .updatePadding(top = ScreenUtil.getAbsStatusBarHeight(holder.itemView.rootView))
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {
@@ -90,5 +104,8 @@ class SourceDetailAdapter(
         val tvTitle = vb.tvTitle
         val tvDate = vb.tvDate
         val tvResolution = vb.tvResolution
+        val tvSize = vb.tvSize
+        val tvUri = vb.tvUri
+        val tvPath = vb.tvPath
     }
 }

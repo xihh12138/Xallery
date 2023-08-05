@@ -62,6 +62,7 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
             }
         }).apply {
             setIsLongpressEnabled(false)
+            setOnDoubleTapListener(null)
         }
 
     private val resetValueAnimator =
@@ -202,6 +203,7 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
             removeCallbacks(resetRunnable)
             resetValueAnimator.end()
             isInterceptTouchEvent = true
+            parent.requestDisallowInterceptTouchEvent(true)
         }
 
         return isInterceptTouchEvent
@@ -216,6 +218,7 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
                 scrollToFirstPage()
             }
         }
+        parent.requestDisallowInterceptTouchEvent(false)
     }
 
     fun scrollToFirstPage(needPost: Boolean = false, isSmooth: Boolean = true) {

@@ -4,4 +4,8 @@
     <string name="title_title">标题</string>
     <string name="title_date">日期</string>
     <string name="title_resolution">解析度</string>
+    <string name="title_size">大小</string>
+    <string name="title_uri">URI</string>
+    <string name="title_path">路径</string>
+    <string name="title_owner">拥有者</string>
 </resources>
