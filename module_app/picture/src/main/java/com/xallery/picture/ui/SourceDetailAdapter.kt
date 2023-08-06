@@ -1,6 +1,7 @@
 package com.xallery.picture.ui
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -8,13 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xallery.common.repository.db.model.Source
 import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
-import com.xihh.base.util.ScreenUtil
-import com.xihh.base.util.get12HourHMString
-import com.xihh.base.util.getYMDString
-import com.xihh.base.util.logx
-import com.xihh.base.util.setTimeMills
-import java.util.Calendar
-import java.util.Locale
+import com.xihh.base.ui.PictureView
+import com.xihh.base.ui.VerticalTwoViewPager
+import com.xihh.base.util.*
+import java.util.*
 
 class SourceDetailAdapter(
     private val pictureViewListener: PictureView.DragListener,
@@ -37,12 +35,17 @@ class SourceDetailAdapter(
         }
     }
 
-    private var curVerticalPage = 0
+    var curVerticalPage = 0
+        private set
 
     fun updateData(data: List<Source>) {
         sourceList = data
 
         notifyDataSetChanged()
+    }
+
+    fun getItemViewViewBinding(itemView: View): ItemSourceDetailBinding {
+        return ItemSourceDetailBinding.bind(itemView)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(
@@ -80,11 +83,13 @@ class SourceDetailAdapter(
         holder.source.addDragListener(pictureViewListener)
         holder.pager.addListener(mPagerListener)
 
+        // ---------- 这是为了优化用户左右滚动时的体验 ----------
         if (curVerticalPage == 0) {
             holder.pager.scrollToFirstPage(true, false)
         } else {
             holder.pager.scrollToSecondPage(true, false)
         }
+        // ---------- 在这里适配状态栏 ----------
         holder.pager.getChildAt(1)
             .updatePadding(top = ScreenUtil.getAbsStatusBarHeight(holder.itemView.rootView))
     }

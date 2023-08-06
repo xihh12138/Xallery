@@ -21,6 +21,9 @@ interface SourceDao {
 
     //<editor-fold desc="删删删删删删删删删删删删删删删删删删删删删删删删删删删删删删">
 
+    @Query("DELETE FROM Source")
+    suspend fun deleteAll()
+
     //</editor-fold>删删删删删删删删删删删删删删删删删删删删删删删删删删删删删删
 
 

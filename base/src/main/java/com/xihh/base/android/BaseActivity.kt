@@ -11,6 +11,7 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
@@ -70,12 +71,15 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity(), OnGlobalLay
         if (event.action == MotionEvent.ACTION_DOWN) {
             // 获取当前获得当前焦点所在View
             val view = currentFocus
-            if (isClickEditText(view, event)) {
+            if (notClickEditText(view, event)) {
                 // 如果不是edittext，则隐藏键盘
                 val inputMethodManager =
                     getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                 inputMethodManager.hideSoftInputFromWindow(view!!.windowToken, 0)
                 whenEditLoseFocus(event)
+            }
+            if (notClickSelectedTextView(view, event)) {
+                view?.clearFocus()
             }
             return super.dispatchTouchEvent(event)
         }
@@ -93,8 +97,23 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity(), OnGlobalLay
      * 对于所有的Activity都适用,所以定义在BaseActivity里面,被子类继承
      * 点击外部隐藏输入软键盘,获取到EditText的位置,做出点击判断
      */
-    private fun isClickEditText(view: View?, event: MotionEvent): Boolean {
+    private fun notClickEditText(view: View?, event: MotionEvent): Boolean {
         if (view != null && view is EditText) {
+            val leftTop = intArrayOf(0, 0)
+            // 获取输入框当前的 location 位置
+            view.getLocationInWindow(leftTop)
+            val left = leftTop[0]
+            val top = leftTop[1]
+            // 此处根据输入框左上位置和宽高获得右下位置
+            val bottom = top + view.getHeight()
+            val right = left + view.getWidth()
+            return !(event.x > left && event.x < right && event.y > top && event.y < bottom)
+        }
+        return false
+    }
+
+    private fun notClickSelectedTextView(view: View?, event: MotionEvent): Boolean {
+        if (view != null && view is TextView && view.hasSelection()) {
             val leftTop = intArrayOf(0, 0)
             // 获取输入框当前的 location 位置
             view.getLocationInWindow(leftTop)

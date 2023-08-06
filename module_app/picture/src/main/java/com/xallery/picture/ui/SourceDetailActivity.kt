@@ -25,6 +25,9 @@ import com.xallery.picture.repo.SourceDetailsViewModel
 import com.xihh.base.android.BaseActivity
 import com.xihh.base.android.appContext
 import com.xihh.base.ui.FadedPageTransformer
+import com.xihh.base.ui.PictureView
+import com.xihh.base.ui.VerticalTwoViewPager
+import com.xihh.base.util.ViewPager2Helper
 import com.xihh.base.util.get12HourHMString
 import com.xihh.base.util.getYMDString
 import com.xihh.base.util.logx
@@ -32,9 +35,12 @@ import com.xihh.base.util.setTimeMills
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
+
+    private val viewPager2Helper by lazy { ViewPager2Helper(vb.viewpager) }
 
     private val vm by lazy {
         ViewModelProvider(
@@ -192,6 +198,14 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             vb.tvInfoLocation.isVisible = true
         } else {
             vb.tvInfoLocation.isVisible = false
+        }
+    }
+
+    override fun onBackPressed() {
+        if (pagerAdapter.curVerticalPage == 0) {
+            onBackPressedDispatcher.onBackPressed()
+        } else {
+            pagerAdapter.getItemViewViewBinding(viewPager2Helper.recyclerView.getChildAt(0)).pager.scrollToFirstPage()
         }
     }
 

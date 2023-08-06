@@ -32,6 +32,7 @@ class MainViewModel : ViewModel(), ILoading by LoadingDelegate(), IToast by Toas
         val sourceList =
             mediaStoreFetcher.fetchSource(MediaStoreFetcher.QueryParams(MediaStoreFetcher.FilterType.FILTER_NONE))
 
+        db.sourceDao.deleteAll()
         db.sourceDao.addAll(sourceList)
 
         SourceDBReadyBroadcaster(appContext).notifySourceDBReady(oldSourceCount, sourceList.size)

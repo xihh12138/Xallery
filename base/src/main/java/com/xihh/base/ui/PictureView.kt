@@ -1,4 +1,4 @@
-package com.xallery.picture.ui
+package com.xihh.base.ui
 
 import android.animation.FloatArrayEvaluator
 import android.animation.ValueAnimator
