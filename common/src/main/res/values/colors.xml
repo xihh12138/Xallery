@@ -32,7 +32,8 @@
     <color name="error">#FF0D0D</color>
     <color name="success">#02A870</color>
 
-    <color name="primary_gray">#E9E9EA</color>
+    <color name="primary_gray">#999999</color>
+    <color name="secondary_gray">#E9E9EA</color>
 
     <color name="primary_gradient_start">#7A2FEA</color>
     <color name="primary_gradient_end">#1F81FF</color>

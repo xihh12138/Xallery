@@ -8,4 +8,6 @@
     <string name="title_uri">URI</string>
     <string name="title_path">路径</string>
     <string name="title_owner">拥有者</string>
+    <string name="title_coordinate">坐标</string>
+    <string name="title_address">地址</string>
 </resources>

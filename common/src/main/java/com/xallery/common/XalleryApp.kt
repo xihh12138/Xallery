@@ -14,6 +14,7 @@ import com.xihh.base.util.logf
 import com.xihh.base.util.logx
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import org.osmdroid.config.Configuration
 
 class XalleryApp : BaseApplication(), CoroutineScope by MainScope(), AppBackgroundListener {
 
@@ -28,6 +29,7 @@ class XalleryApp : BaseApplication(), CoroutineScope by MainScope(), AppBackgrou
         logx { "XalleryApp: onCreate   isMainProcess=$isMainProcess" }
         if (isMainProcess) {
             ActivityTask.addAppBackgroundListener(this)
+            Configuration.getInstance().setUserAgentValue("xallery_xihh")
             // 初始化 Toast 框架
             Toaster.init(this, object : BlackToastStyle() {
                 override fun getBackgroundDrawable(context: Context?): Drawable {

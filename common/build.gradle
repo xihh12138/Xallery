@@ -88,4 +88,6 @@ dependencies {
     api rootProject.ext.depends.toaster
     //lottie
     api rootProject.ext.depends.lottie
+    //lottie
+    api rootProject.ext.depends.open_street_map
 }

@@ -11,7 +11,17 @@ import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
 import com.xihh.base.ui.PictureView
 import com.xihh.base.ui.VerticalTwoViewPager
-import com.xihh.base.util.*
+import com.xihh.base.util.ScreenUtil
+import com.xihh.base.util.get12HourHMString
+import com.xihh.base.util.getYMDString
+import com.xihh.base.util.setTimeMills
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.ItemizedIconOverlay
+import org.osmdroid.views.overlay.compass.CompassOverlay
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import org.osmdroid.views.overlay.gridlines.LatLonGridlineOverlay2
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 
 class SourceDetailAdapter(
@@ -26,7 +36,6 @@ class SourceDetailAdapter(
     private val mPagerListener = object : VerticalTwoViewPager.Listener {
         override fun onPageScroll(totalDistanceY: Float, distanceRatio: Float) {
             pageListener.onPageScroll(totalDistanceY, distanceRatio)
-            logx { "SourceDetailAdapter: onPageScroll totalDistanceY=$totalDistanceY  distanceRatio=$distanceRatio" }
         }
 
         override fun onPageChange(page: Int) {
@@ -54,6 +63,8 @@ class SourceDetailAdapter(
         ivBack.setOnClickListener {
             pager.scrollToFirstPage()
         }
+        map.setTileSource(TileSourceFactory.MAPNIK)
+        map.controller.setZoom(16.0)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
@@ -76,6 +87,14 @@ class SourceDetailAdapter(
         } else {
             holder.tvPath.isVisible = false
         }
+
+        source.lat?.let { lat ->
+            source.lng?.let { lng ->
+                holder.map.controller.setCenter(GeoPoint(lat, lng))
+
+                holder.tvCoordinate.text = "$lat , $lng"
+            }
+        }
     }
 
     override fun onViewAttachedToWindow(holder: VH) {
@@ -92,12 +111,14 @@ class SourceDetailAdapter(
         // ---------- 在这里适配状态栏 ----------
         holder.pager.getChildAt(1)
             .updatePadding(top = ScreenUtil.getAbsStatusBarHeight(holder.itemView.rootView))
+        holder.map.onResume()
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {
         super.onViewDetachedFromWindow(holder)
         holder.source.removeDragListener(pictureViewListener)
         holder.pager.removeListener(mPagerListener)
+        holder.map.onPause()
     }
 
     override fun getItemCount() = sourceList?.size ?: 0
@@ -112,5 +133,8 @@ class SourceDetailAdapter(
         val tvSize = vb.tvSize
         val tvUri = vb.tvUri
         val tvPath = vb.tvPath
+        val map = vb.map
+        val tvCoordinate = vb.tvCoordinate
+        val tvAddress = vb.tvAddress
     }
 }

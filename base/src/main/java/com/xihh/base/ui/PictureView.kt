@@ -526,11 +526,9 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             originalDragY = (height - drawableHeight) / 2
 
             if (drawableWidth / drawableHeight > width / height) {
-                logx { "PictureView: sizeChangeRunnable   图片比视图宽" }
                 smallScale = width / drawableWidth
                 bigScale = height / drawableHeight
             } else {
-                logx { "PictureView: sizeChangeRunnable   图片比视图高" }
                 smallScale = height / drawableHeight
                 bigScale = width / drawableWidth
             }

@@ -63,8 +63,8 @@
             android:id="@+id/tl_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_20"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
             android:text="@string/title_date"
             android:textColor="@color/text_hint"
             android:textSize="@dimen/sp_14"
@@ -86,8 +86,8 @@
             android:id="@+id/tl_resolution"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_20"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
             android:text="@string/title_resolution"
             android:textColor="@color/text_hint"
             android:textSize="@dimen/sp_14"
@@ -109,8 +109,8 @@
             android:id="@+id/tl_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_20"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
             android:text="@string/title_size"
             android:textColor="@color/text_hint"
             android:textSize="@dimen/sp_14"
@@ -132,8 +132,8 @@
             android:id="@+id/tl_uri"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_20"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
             android:text="@string/title_uri"
             android:textColor="@color/text_hint"
             android:textIsSelectable="true"
@@ -155,8 +155,8 @@
             android:id="@+id/tl_path"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_20"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
             android:text="@string/title_path"
             android:textColor="@color/text_hint"
             android:textIsSelectable="true"
@@ -173,6 +173,89 @@
             android:textSize="@dimen/sp_14"
             app:layout_constraintStart_toEndOf="@id/tl_path"
             app:layout_constraintTop_toTopOf="@id/tl_path" />
+
+        <ImageView
+            android:id="@+id/iv_location"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_marginTop="@dimen/dp_40"
+            android:src="@drawable/ic_location"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tl_path" />
+
+        <View
+            android:layout_width="@dimen/dp_30"
+            android:layout_height="@dimen/dp_1"
+            android:layout_marginEnd="@dimen/dp_15"
+            android:background="@drawable/bg_gray_2"
+            app:layout_constraintBottom_toBottomOf="@id/iv_location"
+            app:layout_constraintEnd_toStartOf="@id/iv_location"
+            app:layout_constraintTop_toTopOf="@id/iv_location" />
+
+        <View
+            android:layout_width="@dimen/dp_30"
+            android:layout_height="@dimen/dp_1"
+            android:layout_marginStart="@dimen/dp_15"
+            android:background="@drawable/bg_gray_2"
+            app:layout_constraintBottom_toBottomOf="@id/iv_location"
+            app:layout_constraintStart_toEndOf="@id/iv_location"
+            app:layout_constraintTop_toTopOf="@id/iv_location" />
+
+        <com.xallery.common.ui.view.NestedMapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_10"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintTop_toBottomOf="@id/iv_location" />
+
+        <TextView
+            android:id="@+id/tl_coordinate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
+            android:text="@string/title_coordinate"
+            android:textColor="@color/text_hint"
+            android:textIsSelectable="true"
+            android:textSize="@dimen/sp_14"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/map" />
+
+        <TextView
+            android:id="@+id/tv_coordinate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_15"
+            android:textColor="@color/white"
+            android:textSize="@dimen/sp_14"
+            app:layout_constraintStart_toEndOf="@id/tl_coordinate"
+            app:layout_constraintTop_toTopOf="@id/tl_coordinate" />
+
+        <TextView
+            android:id="@+id/tl_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_10"
+            android:layout_marginTop="@dimen/dp_15"
+            android:text="@string/title_address"
+            android:textColor="@color/text_hint"
+            android:textIsSelectable="true"
+            android:textSize="@dimen/sp_14"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tl_coordinate" />
+
+        <TextView
+            android:id="@+id/tv_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_15"
+            android:textColor="@color/white"
+            android:textSize="@dimen/sp_14"
+            app:layout_constraintStart_toEndOf="@id/tl_address"
+            app:layout_constraintTop_toTopOf="@id/tl_address" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
