@@ -18,6 +18,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+import com.xallery.common.ui.view.XMapView
 import com.xallery.common.util.MediaStoreFetcher
 import com.xallery.picture.SourceBroadcaster
 import com.xallery.picture.databinding.ActivitySourceDetailBinding
@@ -27,16 +28,11 @@ import com.xihh.base.android.appContext
 import com.xihh.base.ui.FadedPageTransformer
 import com.xihh.base.ui.PictureView
 import com.xihh.base.ui.VerticalTwoViewPager
-import com.xihh.base.util.ViewPager2Helper
-import com.xihh.base.util.get12HourHMString
-import com.xihh.base.util.getYMDString
-import com.xihh.base.util.logx
-import com.xihh.base.util.setTimeMills
+import com.xihh.base.util.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
@@ -53,6 +49,8 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             )
         )[SourceDetailsViewModel::class.java]
     }
+
+    private val reuseReferenceProvider = ReuseReferenceProvider<XMapView>()
 
     private val pagerAdapter = SourceDetailAdapter(object : PictureView.DragListener {
         override fun onDrag(
@@ -88,7 +86,7 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
         override fun onPageChange(page: Int) {
         }
-    })
+    }, reuseReferenceProvider)
 
     private val sourceBroadcaster = SourceBroadcaster(appContext)
 
@@ -142,8 +140,14 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         // TODO: 这里有些东西没有搞懂，如果没有下面这行的话再次进入这个activity背景会是透明的，后面有空再研究
+        reuseReferenceProvider.init(builder = {
+            XMapView(this)
+        }, onClear = {
+            it.onDetach()
+        })
         vb.root.background.alpha = 255
         vb.viewpager.adapter = pagerAdapter
+//        viewPager2Helper.disablePrefetch()
         vb.viewpager.setPageTransformer(FadedPageTransformer())
 //        vb.viewpager.let {
 //            (it.javaClass.getDeclaredField("mRecyclerView").apply {
@@ -207,6 +211,11 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
         } else {
             pagerAdapter.getItemViewViewBinding(viewPager2Helper.recyclerView.getChildAt(0)).pager.scrollToFirstPage()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        reuseReferenceProvider.clear()
     }
 
     class TransitionLauncher : ActivityResultContract<Map<String, Any>, Map<String, Any>?>() {

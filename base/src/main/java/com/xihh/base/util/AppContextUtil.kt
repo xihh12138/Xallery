@@ -2,10 +2,7 @@ package com.xihh.base.util
 
 import android.app.Application
 import android.graphics.drawable.Drawable
-import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
-import androidx.annotation.DimenRes
-import androidx.annotation.DrawableRes
+import androidx.annotation.*
 import androidx.core.content.ContextCompat
 import com.xihh.base.android.appContext
 
@@ -21,3 +18,6 @@ fun Application.dimensionRes(@DimenRes id: Int): Float =
 
 fun Application.dimensionPixelOffsetRes(@DimenRes id: Int): Int =
     appContext.resources.getDimensionPixelOffset(id)
+
+fun Application.stringRes(@StringRes id: Int, vararg args: Array<Any>): String =
+    appContext.resources.getString(id, *args)

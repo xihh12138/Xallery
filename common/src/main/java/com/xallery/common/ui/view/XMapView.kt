@@ -1,27 +1,53 @@
 package com.xallery.common.ui.view
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.ViewConfiguration
+import com.xallery.common.R
 import com.xihh.base.util.logx
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.MinimapOverlay
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.compass.CompassOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
-class NestedMapView(context: Context, attrs: AttributeSet?) : MapView(context, attrs) {
-
-    private val disallowSlop = ViewConfiguration.get(context).scaledTouchSlop
+class XMapView(context: Context, attrs: AttributeSet?) : MapView(context, attrs) {
 
     private var startX = 0f
     private var startY = 0f
 
     constructor(context: Context) : this(context, null)
 
+    init {
+        setDestroyMode(false)
+    }
+
+    fun setImageMark(lat: Double, lng: Double, drawable: Drawable, moveToCenter: Boolean = false) {
+        val tag = getTag(R.id.map_unique_marker)
+        if (tag is Marker) {
+            tag.icon = drawable
+            tag.position = GeoPoint(lat, lng)
+        } else {
+            val marker = Marker(this).apply {
+                icon = drawable
+                position = GeoPoint(lat, lng)
+            }
+            setTag(R.id.map_unique_marker, marker)
+            overlays.add(marker)
+        }
+
+        if (moveToCenter) {
+            controller.setCenter(GeoPoint(lat, lng))
+        }
+    }
+
     override fun onFinishInflate() {
         super.onFinishInflate()
+        setTileSource(TileSourceFactory.MAPNIK)
         setMultiTouchControls(true)
         overlays.add(MyLocationNewOverlay(this).apply { enableMyLocation() })
         overlays.add(CompassOverlay(context, this).apply { enableCompass() })
@@ -39,5 +65,9 @@ class NestedMapView(context: Context, attrs: AttributeSet?) : MapView(context, a
             }
         }
         return super.onInterceptTouchEvent(ev)
+    }
+
+    class FastScaleGestureOverlay(private val mapView: MapView) : Overlay() {
+
     }
 }

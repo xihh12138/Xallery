@@ -24,7 +24,7 @@ class AudioPlayer private constructor(
 ) : Closeable, OnPreparedListener, OnCompletionListener {
 
     private val scope =
-        CoroutineScope(Job() + Dispatchers.IO + CoroutineExceptionHandler { _, throwable ->
+        CoroutineScope(Job() + Dispatchers.Main + CoroutineExceptionHandler { _, throwable ->
             logf { "AudioPlayer: CoroutineExceptionHandler=${throwable.stackTraceToString()}" }
         })
 
