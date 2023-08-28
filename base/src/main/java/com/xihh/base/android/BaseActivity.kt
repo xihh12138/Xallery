@@ -161,6 +161,6 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity(), OnGlobalLay
             val method = clazz.getMethod("inflate", LayoutInflater::class.java)
             return method.invoke(null, layoutInflater) as T
         }
-        throw RuntimeException()
+        throw RuntimeException("Can't inflate $type")
     }
 }

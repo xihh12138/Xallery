@@ -66,7 +66,7 @@ abstract class BaseDialogFragment<VB : ViewBinding> : DialogFragment() {
             val method = clazz.getMethod("inflate", LayoutInflater::class.java)
             return method.invoke(null, layoutInflater) as VB
         }
-        throw RuntimeException()
+        throw RuntimeException("Can't inflate $type")
     }
 
     fun show(fragmentManager: FragmentManager) {

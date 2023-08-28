@@ -25,21 +25,37 @@
             android:id="@+id/tv_info_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true" />
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_13" />
 
         <TextView
             android:id="@+id/tv_info_time_and_size"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true" />
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_13" />
 
         <TextView
             android:id="@+id/tv_info_location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true" />
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_13" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_page_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:gravity="center"
+        android:paddingEnd="@dimen/dp_10"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/sp_13" />
 
     <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
     <!--        android:id="@+id/sheet_action"-->

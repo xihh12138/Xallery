@@ -10,7 +10,6 @@ import com.xallery.common.repository.db.model.Source
 import com.xallery.common.ui.view.XMapView
 import com.xallery.common.util.loadUri
 import com.xallery.picture.databinding.ItemSourceDetailBinding
-import com.xihh.base.android.appContext
 import com.xihh.base.ui.PictureView
 import com.xihh.base.ui.VerticalTwoViewPager
 import com.xihh.base.util.*
@@ -78,50 +77,6 @@ class SourceDetailAdapter(
         } else {
             holder.tvPath.isVisible = false
         }
-
-        val lat = source.lat
-        val lng = source.lng
-        if (lat != null && lng != null) {
-            holder.tvCoordinate.text = "$lat , $lng"
-
-//            appContext.contentResolver.openInputStream(source.uri).use {
-//                val mapView = (holder.mapContainer.getChildAt(0) as? XMapView).let { xmap ->
-//                    if (xmap == null) {
-//                        logx { "SourceDetailAdapter: onBindViewHolder[$position]   mapView doesn't load,load mapView" }
-//                        val mapView = reuseReferenceProvider.acquire()
-//                        mapView.parent?.let {
-//                            logx { "SourceDetailAdapter: onBindViewHolder[$position]   mapView was using,remove from it's old parent" }
-//                            reuseReferenceProvider.release(mapView)
-//
-//                            (it as ViewGroup).removeView(mapView)
-//                        }
-//                        holder.mapContainer.addView(mapView)
-//                        mapView
-//                    } else {
-//                        logx { "SourceDetailAdapter: onBindViewHolder[$position]   mapView is exist" }
-//                        xmap
-//                    }
-//                }
-//                val drawable = /*ScaleDrawable(
-//                    Drawable.createFromStream(it, source.path)
-//                        ?: appContext.drawableRes(org.osmdroid.library.R.drawable.marker_default),
-//                    Gravity.BOTTOM,
-//                    0.9f,
-//                    0.9f
-//                )*/appContext.drawableRes(org.osmdroid.library.R.drawable.marker_default)!!
-//                drawable.level = 1
-//                mapView.setImageMark(lat, lng, drawable, true)
-//                mapView.setTileSource(TileSourceFactory.MAPNIK)
-//                mapView.controller.setZoom(16.0)
-//            }
-        } else {
-            holder.tvCoordinate.text = ""
-//            logx { "SourceDetailAdapter: onBindViewHolder[$position]   remove mapView" }
-//            (holder.mapContainer.getChildAt(0) as? XMapView)?.let {
-//                reuseReferenceProvider.release(it)
-//                holder.mapContainer.removeView(it)
-//            }
-        }
     }
 
     override fun onViewAttachedToWindow(holder: VH) {
@@ -139,34 +94,10 @@ class SourceDetailAdapter(
         // ---------- 在这里适配状态栏 ----------
         holder.pager.getChildAt(1)
             .updatePadding(top = ScreenUtil.getAbsStatusBarHeight(holder.itemView.rootView))
-//        (holder.mapContainer.getChildAt(0) as? XMapView)?.onResume()
 
         val position = holder.adapterPosition
         val source = sourceList?.getOrNull(position) ?: return
-        val lat = source.lat
-        val lng = source.lng
-        if (lat != null && lng != null) {
-            appContext.contentResolver.openInputStream(source.uri).use {
-                val mapView = mapViewProvider.acquire()
-                holder.mapContainer.addView(mapView)
-                mapView.onResume()
-                val drawable = /*ScaleDrawable(
-                    Drawable.createFromStream(it, source.path)
-                        ?: appContext.drawableRes(org.osmdroid.library.R.drawable.marker_default),
-                    Gravity.BOTTOM,
-                    0.9f,
-                    0.9f
-                )*/appContext.drawableRes(org.osmdroid.library.R.drawable.marker_default)!!
-                drawable.level = 1
-                mapView.setImageMark(lat, lng, drawable, true)
-                mapView.controller.setZoom(16.0)
-            }
-        } else {
-            (holder.mapContainer.getChildAt(0) as? XMapView)?.let { mapView ->
-                mapViewProvider.release(mapView)
-                holder.mapContainer.removeView(mapView)
-            }
-        }
+        holder.map.setLatLng(source.lat, source.lng, mapViewProvider)
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {
@@ -174,11 +105,7 @@ class SourceDetailAdapter(
         logx { "SourceDetailAdapter: onViewDetachedFromWindow[${holder.adapterPosition}]" }
         holder.source.removeDragListener(pictureViewListener)
         holder.pager.removeListener(mPagerListener)
-//        (holder.mapContainer.getChildAt(0) as? XMapView)?.onPause()
-        (holder.mapContainer.getChildAt(0) as? XMapView)?.let { mapView ->
-            mapViewProvider.release(mapView)
-            holder.mapContainer.removeView(mapView)
-        }
+        holder.map.unloadMapView(mapViewProvider)
     }
 
     override fun getItemCount() = sourceList?.size ?: 0
@@ -193,8 +120,6 @@ class SourceDetailAdapter(
         val tvSize = vb.tvSize
         val tvUri = vb.tvUri
         val tvPath = vb.tvPath
-        val mapContainer = vb.mapContainer
-        val tvCoordinate = vb.tvCoordinate
-        val tvAddress = vb.tvAddress
+        val map = vb.map
     }
 }

@@ -1,7 +1,6 @@
-package com.xallery.picture.ui
+package com.xihh.base.util
 
 import android.util.ArrayMap
-import com.xihh.base.util.logx
 
 class ReuseReferenceProvider<Value>(private val maxPoolSize: Int = 3) {
 
@@ -18,13 +17,13 @@ class ReuseReferenceProvider<Value>(private val maxPoolSize: Int = 3) {
     // ---------- 引用处理 ----------
 
     fun init(
-        builder: (index: Int) -> Value, onClear: (Value) -> Unit,
+        builder: (index: Int) -> Value, onClear: ((Value) -> Unit)?,
     ): ReuseReferenceProvider<Value> {
         for (i in 0 until maxPoolSize) {
             val value = builder(i)
 
             pool.add(value)
-            poolCopy.add(ClearWrapper(value) { onClear(value) })
+            poolCopy.add(ClearWrapper(value) { onClear?.invoke(value) })
         }
 
         return this
@@ -61,12 +60,12 @@ class ReuseReferenceProvider<Value>(private val maxPoolSize: Int = 3) {
 
     fun clear() {
         poolCopy.forEach {
-            it.onClear?.invoke()
+            it.onClear.invoke()
         }
         poolCopy.clear()
         pool.clear()
         referenceCounter.clear()
     }
 
-    class ClearWrapper<Value>(val value: Value, val onClear: (() -> Unit)? = null)
+    class ClearWrapper<Value>(val value: Value, val onClear: () -> Unit)
 }

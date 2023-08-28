@@ -42,6 +42,9 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
     private var dragDistanceRatio = 0f
     private var dragCancelDistance = 0
 
+    private var downX = 0f
+    private var downY = 0f
+
     private var dragX = 0f
     private var dragY = 0f
 
@@ -49,9 +52,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         ViewConfiguration.get(context).scaledMinimumFlingVelocity shl 2
 
     private val scaleFlingScroller = OverScroller(context, DecelerateInterpolator())
-
-    private var originalDragX = 0f
-    private var originalDragY = 0f
     private var smallScale = 0f
     private var bigScale = 0f
     private var zoomScale = 1f
@@ -78,6 +78,13 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         GestureDetectorCompat(context, object : GestureDetector.SimpleOnGestureListener() {
 
             override fun onDown(e: MotionEvent): Boolean {
+                downX = e.x
+                downY = e.y
+
+                // ---------- 如果是放大模式直接不让父布局拦截 ----------
+                if (isZoom) {
+                    parent.requestDisallowInterceptTouchEvent(true)
+                }
                 return true
             }
 
@@ -135,6 +142,7 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             }
 
             override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                logx { "PictureView: onScaleBegin   " }
                 return true
             }
 
@@ -226,9 +234,12 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 reset()
             }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                parent.requestDisallowInterceptTouchEvent(true)
+            }
         }
 
-//        logx { "PictureView: onTouchEvent($handle) event=$event" }
+        logx { "PictureView: onTouchEvent($handle) event=$event" }
 
         return handle
     }
@@ -258,16 +269,16 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 }
             }
 
-//            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
+            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
             if (isZoom) {
-//                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
+                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             } else if (firstScrollDirection.isHorizontalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
-//                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
+                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
                 reset()
             } else if (floatingDraggableDirection == firstScrollDirection) {
-//                    logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
+                logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             }
         } else {
@@ -289,16 +300,16 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
                 }
             }
 
-//            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
+            logx { "PictureView: handleNestedScroll scrollDirection=$firstScrollDirection totalDistanceX=$totalDistanceX totalDistanceY=$totalDistanceY" }
             if (isZoom) {
-//                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
+                logx { "PictureView: handleNestedScroll  isZoom,requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             } else if (firstScrollDirection.isVerticalDirection) {
                 // ---------- 滑动方向和父布局需要处理的方向一致，直接不处理 ----------
-//                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
+                logx { "PictureView: handleNestedScroll   滑动方向和父布局需要处理的方向一致，直接不处理 " }
                 reset()
             } else if (floatingDraggableDirection == firstScrollDirection) {
-//                logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
+                logx { "PictureView: handleNestedScroll   requestDisallowInterceptTouchEvent " }
                 parent.requestDisallowInterceptTouchEvent(true)
             }
         }
@@ -374,11 +385,20 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 isPostingDoubleClick = true
-
             }
 
             MotionEvent.ACTION_MOVE -> {
-                isPostingDoubleClick = false
+                if (isPostingDoubleClick) {
+                    val totalDistanceX = e.x - downX
+                    val totalDistanceY = e.y - downY
+                    val totalDistance = Math.sqrt(
+                        Math.pow(Math.abs(totalDistanceX).toDouble(), 2.0)
+                                + Math.pow(Math.abs(totalDistanceY).toDouble(), 2.0)
+                    ).toFloat()
+                    if (totalDistance > touchDownSlop) {
+                        isPostingDoubleClick = false
+                    }
+                }
             }
 
             MotionEvent.ACTION_UP -> {
@@ -521,9 +541,6 @@ class PictureView(context: Context, attrs: AttributeSet?) : AppCompatImageView(c
             val drawable = drawable ?: return
             val drawableWidth = drawable.bounds.width().toFloat()
             val drawableHeight = drawable.bounds.height().toFloat()
-
-            originalDragX = (width - drawableWidth) / 2
-            originalDragY = (height - drawableHeight) / 2
 
             if (drawableWidth / drawableHeight > width / height) {
                 smallScale = width / drawableWidth

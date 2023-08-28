@@ -18,6 +18,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+import com.google.android.material.animation.ArgbEvaluatorCompat
 import com.xallery.common.ui.view.XMapView
 import com.xallery.common.util.MediaStoreFetcher
 import com.xallery.picture.SourceBroadcaster
@@ -40,12 +41,10 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
     private val vm by lazy {
         ViewModelProvider(
-            this,
-            SourceDetailsViewModel.Factory(
+            this, SourceDetailsViewModel.Factory(
                 intent.getIntExtra(
                     EXTRA_FILTER_TYPE, MediaStoreFetcher.FilterType.FILTER_VISUAL_MEDIA
-                ),
-                intent.getIntExtra(EXTRA_POSITION, 0)
+                ), intent.getIntExtra(EXTRA_POSITION, 0)
             )
         )[SourceDetailsViewModel::class.java]
     }
@@ -78,13 +77,27 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             onBackPressedDispatcher.onBackPressed()
         }
     }, object : VerticalTwoViewPager.Listener {
+
+        private val pageNumColorEvaluator = ArgbEvaluatorCompat.getInstance()
+        val pageNumTextStartColor by lazy { colorRes(com.xallery.common.R.color.text_primary) }
+        val pageNumTextEndColor by lazy { colorRes(com.xallery.common.R.color.white) }
+
         override fun onPageScroll(totalDistanceY: Float, distanceRatio: Float) {
             val ratio = Math.min(1f, distanceRatio)
 
             vb.llInfo.alpha = 1 - ratio
+
+            vb.tvPageNum.setTextColor(
+                pageNumColorEvaluator.evaluate(ratio, pageNumTextStartColor, pageNumTextEndColor)
+            )
         }
 
         override fun onPageChange(page: Int) {
+            if (page == 0) {
+                vb.tvPageNum.setTextColor(pageNumTextStartColor)
+            } else {
+                vb.tvPageNum.setTextColor(pageNumTextEndColor)
+            }
         }
     }, reuseReferenceProvider)
 
@@ -92,33 +105,33 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
     override fun adaptWindowInsets(insets: Rect) {
         vb.llInfo.updatePadding(top = insets.top)
+        vb.tvPageNum.updatePadding(top = insets.top)
         super.adaptWindowInsets(insets)
     }
 
     override fun onPrepareAnimation() {
         window.sharedElementEnterTransition = TransitionInflater.from(this)
             .inflateTransition(com.xihh.base.R.transition.image_shared_element_transition)
-            .addListener(
-                object : TransitionListener {
-                    override fun onTransitionStart(transition: Transition?) {
-                        logx { "SourceDetailActivity: onTransitionStart   " }
-                        vb.llInfo.isVisible = false
-                    }
+            .addListener(object : TransitionListener {
+                override fun onTransitionStart(transition: Transition?) {
+                    logx { "SourceDetailActivity: onTransitionStart   " }
+                    vb.llInfo.isVisible = false
+                }
 
-                    override fun onTransitionEnd(transition: Transition?) {
-                        logx { "SourceDetailActivity: onTransitionEnd   " }
-                        vb.llInfo.isVisible = true
-                    }
+                override fun onTransitionEnd(transition: Transition?) {
+                    logx { "SourceDetailActivity: onTransitionEnd   " }
+                    vb.llInfo.isVisible = true
+                }
 
-                    override fun onTransitionCancel(transition: Transition?) {
-                    }
+                override fun onTransitionCancel(transition: Transition?) {
+                }
 
-                    override fun onTransitionPause(transition: Transition?) {
-                    }
+                override fun onTransitionPause(transition: Transition?) {
+                }
 
-                    override fun onTransitionResume(transition: Transition?) {
-                    }
-                })
+                override fun onTransitionResume(transition: Transition?) {
+                }
+            })
 
         postponeEnterTransition()
 
@@ -179,7 +192,8 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
 
     private fun updateInfoVIew(position: Int) {
         logx { "SourceDetailActivity: updateInfoVIew   position=$position" }
-        val source = vm.sourcePageInfoFlow.value?.source ?: return
+        val pageInfo = vm.sourcePageInfoFlow.value ?: return
+        val source = pageInfo.source
         val calendar = Calendar.getInstance().setTimeMills(source.addTimestamp)
         val locale = Locale.getDefault()
 
@@ -203,6 +217,8 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
         } else {
             vb.tvInfoLocation.isVisible = false
         }
+
+        vb.tvPageNum.text = "${pageInfo.position + 1} / ${pageInfo.listSum}"
     }
 
     override fun onBackPressed() {
@@ -224,15 +240,12 @@ class SourceDetailActivity : BaseActivity<ActivitySourceDetailBinding>() {
             val filterType = input["filterType"] as Int
             val position = input["position"] as Int
             val view = (input["view"] as WeakReference<*>).get() as View
-            return Intent(context, SourceDetailActivity::class.java)
-                .putExtra(
-                    ActivityResultContracts.StartActivityForResult.EXTRA_ACTIVITY_OPTIONS_BUNDLE,
-                    ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        context as Activity, view, view.transitionName
-                    ).toBundle()
-                )
-                .putExtra(EXTRA_FILTER_TYPE, filterType)
-                .putExtra(EXTRA_POSITION, position)
+            return Intent(context, SourceDetailActivity::class.java).putExtra(
+                ActivityResultContracts.StartActivityForResult.EXTRA_ACTIVITY_OPTIONS_BUNDLE,
+                ActivityOptionsCompat.makeSceneTransitionAnimation(
+                    context as Activity, view, view.transitionName
+                ).toBundle()
+            ).putExtra(EXTRA_FILTER_TYPE, filterType).putExtra(EXTRA_POSITION, position)
         }
 
         override fun parseResult(resultCode: Int, intent: Intent?): Map<String, Any>? {

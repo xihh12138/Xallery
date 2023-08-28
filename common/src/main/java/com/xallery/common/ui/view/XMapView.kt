@@ -6,19 +6,18 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import com.xallery.common.R
 import com.xihh.base.util.logx
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.MapQuestTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
-import org.osmdroid.views.overlay.compass.CompassOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class XMapView(context: Context, attrs: AttributeSet?) : MapView(context, attrs) {
 
-    private var startX = 0f
-    private var startY = 0f
+    private var downX = 0f
+    private var downY = 0f
 
     constructor(context: Context) : this(context, null)
 
@@ -47,19 +46,20 @@ class XMapView(context: Context, attrs: AttributeSet?) : MapView(context, attrs)
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        setTileSource(TileSourceFactory.MAPNIK)
-        setMultiTouchControls(true)
+        setTileSource(MapQuestTileSource(context))
         overlays.add(MyLocationNewOverlay(this).apply { enableMyLocation() })
-        overlays.add(CompassOverlay(context, this).apply { enableCompass() })
+//        overlays.add(CompassOverlay(context, this).apply { enableCompass() })
         overlays.add(RotationGestureOverlay(this))
+
+        setMultiTouchControls(true)
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         logx { "NestedMapView: onInterceptTouchEvent ev=$ev" }
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                startX = ev.x
-                startY = ev.y
+                downX = ev.x
+                downY = ev.y
 
                 parent.requestDisallowInterceptTouchEvent(true)
             }

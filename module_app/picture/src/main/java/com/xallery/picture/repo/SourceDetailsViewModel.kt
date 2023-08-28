@@ -20,8 +20,8 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
 
     private var position = 0
 
-    private val _curSourceFlow = MutableStateFlow<SourcePageInfo?>(null)
-    val sourcePageInfoFlow = _curSourceFlow.asStateFlow()
+    private val _sourcePageInfoFlow = MutableStateFlow<SourcePageInfo?>(null)
+    val sourcePageInfoFlow = _sourcePageInfoFlow.asStateFlow()
 
     private val _sourceListFlow = MutableStateFlow<List<Source>?>(null)
     val sourceListFlow = _sourceListFlow.asStateFlow()
@@ -32,7 +32,9 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
             val isSortDesc = config.isSortDesc
             val sourceList = getSourceList(filterType, sortColumn, isSortDesc)
 
-            _curSourceFlow.emit(SourcePageInfo(sourceList[position], position, sourceList.size))
+            _sourcePageInfoFlow.emit(
+                SourcePageInfo(sourceList[position], position, sourceList.size)
+            )
 
             _sourceListFlow.emit(sourceList)
         }
@@ -45,9 +47,9 @@ class SourceDetailsViewModel() : ViewModel(), ISourceRepository by SourceReposit
     }
 
     fun updateCurPosition(position: Int) = viewModelScope.launch {
-        sourceListFlow.value?.let { list ->
+        _sourceListFlow.value?.let { list ->
             list.getOrNull(position)?.let {
-                _curSourceFlow.emit(SourcePageInfo(it, position, list.size))
+                _sourcePageInfoFlow.emit(SourcePageInfo(it, position, list.size))
             }
         }
     }

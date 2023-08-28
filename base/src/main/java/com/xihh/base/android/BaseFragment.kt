@@ -119,6 +119,6 @@ abstract class BaseFragment<VB : ViewBinding, VM : ViewModel> : Fragment() {
             val method = clazz.getMethod("inflate", LayoutInflater::class.java)
             return method.invoke(null, layoutInflater) as VB
         }
-        throw RuntimeException()
+        throw RuntimeException("Can't inflate $type")
     }
 }

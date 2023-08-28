@@ -16,7 +16,7 @@ import java.util.*
 class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(context, attrs),
     VerticalTwoViewPagerActionListener by VerticalTwoViewPagerActionListenerHelper() {
 
-    private val interceptSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private val interceptSlop = ViewConfiguration.get(context).scaledTouchSlop * 1.3
     private var isInterceptTouchEvent = false
 
     private val pageChangeDistanceRatio = 0.5f
@@ -25,8 +25,6 @@ class VerticalTwoViewPager(context: Context, attrs: AttributeSet?) : ViewGroup(c
 
     private var cachePage = 0
     val curPage get() = if (scrollY < height) 0 else 1
-
-//    private val flingScroller = OverScroller(context, DecelerateInterpolator())
 
     private val gestureDetector =
         GestureDetectorCompat(context, object : SimpleOnGestureListener() {
